@@ -24,11 +24,9 @@ function addItem(h,t,c){
 	return d;
 }
 function menuStyle(i) {
-	var c=_data.map[i],n=c.name?c.name.replace(/&/g,'&amp;').replace(/</g,'&lt;'):'<em>'+_('Null name')+'</em>';
+	var c=getItem('us:'+i),n=c.name?c.name.replace(/&/g,'&amp;').replace(/</g,'&lt;'):'<em>'+_('Null name')+'</em>';
 	addItem(n,c.name,{holder:pB,data:c.enabled,onclick:function(){
-		loadItem(this,c.enabled=!c.enabled);_data.save();
-		rt.post('UpdateItem',{cmd:'update',data:_data.ids.indexOf(i),id:i});
-		unsafeBroadcast('UpdateStyle',i);
+		loadItem(this,c.enabled=!c.enabled);rt.post('EnableStyle',{id:i,data:c.enabled});
 	}});
 }
 var cur=null,_title;
@@ -39,13 +37,15 @@ function alterStyle(i){
 	}});
 	if(i==_title) cur=d;
 }
+var isApplied=getItem('isApplied');
+function getPopup(){br.executeScript('unsafeExecute(\'window.top.postMessage({topic:"Stylish_GetPopup"},"*");\');');}
 function load(o){
 	tab=o?o.source:null;
 	pT.innerHTML=pB.innerHTML=cT.innerHTML=cB.innerHTML='';
-	if(window.external.mxVersion>'4') addItem(_('Manage styles'),true,{holder:pT,symbol:'➤',onclick:function(){
+	addItem(_('Manage styles'),true,{holder:pT,symbol:'➤',onclick:function(){
 		br.tabs.newTab({url:rt.getPrivateUrl()+'options.html',activate:true});
 	}});
-	addItem(_('Find styles for this site'),true,{holder:pT,symbol:'➤',onclick:function(){
+	if(o) addItem(_('Find styles for this site'),true,{holder:pT,symbol:'➤',onclick:function(){
 		br.tabs.newTab({url:'http://userstyles.org/styles/search/'+encodeURIComponent(br.tabs.getCurrentTab().url),activate:true});
 	}});
 	var d=o&&o.data;
@@ -61,21 +61,27 @@ function load(o){
 			setTimeout(function(){cB.style.pixelHeight=innerHeight-cB.offsetTop;},0);
 		}});
 	}
-	addItem(_('Enable styles'),true,{holder:pT,data:_data.data.isApplied,onclick:function(){
-		_data.set('isApplied',!_data.data.isApplied);loadItem(this,_data.data.isApplied);
-		unsafeBroadcast('UpdateStyle');
+	addItem(_('Enable styles'),true,{holder:pT,data:isApplied,onclick:function(){
+		loadItem(this,setItem('isApplied',isApplied=!isApplied));
+		unsafeBroadcast('window.top.postMessage({topic:"Stylish_UpdateStyle",data:"Stylish_All"},"*");');
 	}});
 	if(d&&d.styles&&d.styles.length) {
-		_data.load();
 		pT.appendChild(document.createElement('hr'));
 		d.styles.forEach(menuStyle);
 	}
+	if(!o) getPopup();
 }
-function getPopup(){unsafeExecute(null,'GetPopup');}
+initFont();
+load();
+rt.listen('GetPopup',getPopup);
 rt.listen('SetPopup',load);
 br.onBrowserEvent=function(o){
 	switch(o.type){
-		case 'TAB_SWITCH': getPopup();
+		case 'TAB_SWITCH':
+		case 'ON_NAVIGATE':
+			load();
 	}
 };
-initFont();load();getPopup();
+rt.onAppEvent=function(o){
+	if(o.type=='ACTION_SHOW') pB.style.pixelHeight=innerHeight-pB.offsetTop;
+};

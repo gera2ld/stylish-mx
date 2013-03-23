@@ -1,5 +1,5 @@
 function $(i){return document.getElementById(i);}
-var N=$('main'),L=$('cList'),O=$('overlay');
+var N=$('main'),L=$('sList'),O=$('overlay');
 function getDate(t){var d=new Date();d.setTime(t*1000);return d.toDateString();}
 function getTime(r){
 	var d=new Date(),z,m=r.updated.match(/(\d+)\/(\d+)\/(\d+)\s+(\d+):(\d+):(\d+)\s+(\+|-)(\d+)/);
@@ -62,7 +62,7 @@ L.onclick=function(e){
 			edit(i);
 			break;
 		case 'enable':
-			e=_data.map[_data.ids[i]];
+			e=map[ids[i]];
 			if(e.enabled=!e.enabled) {
 				p.classList.remove('disabled');
 				o.innerText=_('Disable');
@@ -70,11 +70,11 @@ L.onclick=function(e){
 				p.classList.add('disabled');
 				o.innerText=_('Enable');
 			}
-			_data.save();unsafeBroadcast('UpdateStyle',i);rt.post('Reload');
+			rt.post('SaveStyle',e);
 			break;
 		case 'remove':
-			delete _data.map[i=_data.ids.splice(i,1)[0]];
-			_data.save();unsafeBroadcast('UpdateStyle',i);rt.post('Reload');
+			rt.post('RemoveStyle',i);
+			delete map[ids.splice(i,1)[0]];
 			L.removeChild(p);
 			break;
 		case 'update':
@@ -82,10 +82,10 @@ L.onclick=function(e){
 			break;
 	}
 };
-rt.listen('GotStyle',function(i){_data.load();i=addItem(_data.map[i]);});
+rt.listen('GotStyle',function(o){ids.push(o.id);o=addItem(map[o.id]=o);});
 $('bNew').onclick=function(){rt.post('NewStyle');};
 $('bUpdate').onclick=function(){
-	for(var i=0;i<_data.ids.length;i++) if(_data.map[_data.ids[i]].metaUrl) check(i);
+	for(var i=0;i<ids.length;i++) if(map[ids[i]].metaUrl) check(i);
 };
 var panel=N;
 function switchTo(D){
@@ -132,19 +132,27 @@ window.addEventListener('DOMContentLoaded',function(){
 // Advanced
 var A=$('advanced');
 $('bAdvanced').onclick=function(){showDialog(A);};
-$('cInstall').checked=_data.data.installFile;
-$('cInstall').onchange=function(){_data.set('installFile',this.checked);};
+$('cInstall').onchange=function(){rt.post('SetOptions',{installFile:this.checked});};
 $('aExport').onclick=function(){showDialog(X);xLoad();};
+$('aImport').onchange=function(e){
+	var i,f,files=e.target.files;
+	for(i=0;f=files[i];i++) {
+		var r=new FileReader();
+		r.onload=function(e){rt.post('ImportZip',btoa(e.target.result));};
+		r.readAsBinaryString(f);
+	}
+};
+rt.listen('ShowMessage',function(o){alert(o);});
 A.close=$('aClose').onclick=closeDialog;
 
 // Export
 var X=$('export'),xL=$('xList'),xE=$('bExport');
 function xLoad() {
 	xL.innerHTML='';xE.disabled=false;xE.innerHTML=_('Export');
-	_data.ids.forEach(function(i){
+	ids.forEach(function(i){
 		var d=document.createElement('div');
 		d.className='ellipsis';
-		d.innerText=d.title=_data.map[i].name;
+		d.innerText=d.title=map[i].name;
 		xL.appendChild(d);
 	});
 }
@@ -161,8 +169,8 @@ $('bSelect').onclick=function(){
 };
 function getCSS(c){
 	var d=[];
-	['id','name','url','metaUrl','updateUrl'].forEach(function(i){
-		if(c[i]) d.push('/* @'+i+' '+c[i].toString().replace(/\*/g,'+')+' */');
+	['id','name','url','metaUrl','updateUrl','updated','enabled'].forEach(function(i){
+		if(c[i]!=undefined) d.push('/* @'+i+' '+c[i].toString().replace(/\*/g,'+')+' */');
 	});
 	c.data.forEach(function(i){
 		var p=[];
@@ -177,8 +185,8 @@ function getCSS(c){
 xE.onclick=function(){
 	this.disabled=true;this.innerHTML=_('Exporting...');
 	var z=new JSZip(),n,_n,names={},c,i,j;
-	for(i=0;i<_data.ids.length;i++) if(xL.childNodes[i].classList.contains('selected')) {
-		c=_data.map[_data.ids[i]];n=_n=c.name||'Noname';j=0;
+	for(i=0;i<ids.length;i++) if(xL.childNodes[i].classList.contains('selected')) {
+		c=map[ids[i]];n=_n=c.name||'Noname';j=0;
 		while(names[n]) n=_n+(++j);names[n]=1;
 		z.file(n+'.user.css',getCSS(c));
 	}
@@ -190,7 +198,7 @@ X.close=$('bClose').onclick=closeDialog;
 
 // Update checker
 function check(i){
-	var l=L.childNodes[i],c=_data.map[_data.ids[i]],o=l.querySelector('[data=update]'),m=l.querySelector('.message'),d;
+	var l=L.childNodes[i],c=map[ids[i]],o=l.querySelector('[data=update]'),m=l.querySelector('.message'),d;
 	m.innerHTML=_('Checking for updates...');
 	o.classList.add('hide');
 	function update(){
@@ -199,8 +207,7 @@ function check(i){
 		req.open('GET', c.updateUrl, true);
 		req.onload=function(){
 			rt.listen('UpdatedCSS'+c.id,function(r){if(r) m.innerHTML=r;});
-			if(req.status==200) {_data.temp[c.id]=req.responseText;_data.save();}
-			rt.post('ParseCSS',{source:'UpdatedCSS'+c.id,data:{status:req.status,id:c.id,updated:d}});
+			rt.post('ParseCSS',{source:'UpdatedCSS'+c.id,data:{status:req.status,id:c.id,updated:d,code:req.responseText}});
 			o.classList.remove('hide');
 		};
 		req.send();
@@ -233,6 +240,8 @@ var T=CodeMirror.fromTextArea($('mCode'),{
 	matchBrackets:true,
 	mode:'text/css',
 	lineWrapping:true,
+	indentUnit:4,
+	indentWithTabs:true,
 	extraKeys:{"Enter":"newlineAndIndentContinueComment"}
 });
 T.resize=function(){
@@ -255,7 +264,7 @@ function cloneData(d){
 }
 function edit(i){
 	switchTo(M);fillHeight(S,S.nextElementSibling);
-	M.cur=i;M.dirty=false;M.css=_data.map[_data.ids[M.cur]];
+	M.cur=i;M.dirty=false;M.css=map[ids[M.cur]];
 	M.data=cloneData(M.css.data);
 	S.innerHTML='';S.cur=0;S.dirty=false;
 	I.value=M.css.name;
@@ -307,7 +316,7 @@ function mShow(){
 }
 function mClose(){
 	switchTo(N);
-	loadName(L.childNodes[M.cur],_data.map[_data.ids[M.cur]]);
+	loadName(L.childNodes[M.cur],map[ids[M.cur]]);
 	M.cur=M.css=null;
 }
 bindChange([rD,rR,rP,rU],[M,S]);
@@ -335,27 +344,30 @@ $('mDel').onclick=function(){
 };
 $('mSave').onclick=function(){
 	if(mSave()) {
-		M.css.data=cloneData(M.data);_data.save();
-		unsafeBroadcast('UpdateStyle',M.css.id);rt.post('Reload');
+		M.css.data=cloneData(M.data);rt.post('SaveStyle',M.css);
 	}
 };
 $('mSaveClose').onclick=function(){
 	if(mSave()) {
-		M.css.data=M.data;_data.save();
-		unsafeBroadcast('UpdateStyle',M.css.id);rt.post('Reload');
+		M.css.data=M.data;rt.post('SaveStyle',M.css);
 	}
 	mClose();
 };
 M.close=$('mClose').onclick=function(){if(confirmCancel(M.dirty||!T.isClean())) mClose();};
 
 // Load at last
-L.innerHTML='';
-_data.ids.forEach(function(i){addItem(_data.map[i]);});
+fillHeight(L,$('footer'),document.body);
+var ids,map;L.innerHTML='';
+rt.listen('GotOptions',function(o){
+	ids=o.ids;map=o.map;
+	ids.forEach(function(i){addItem(map[i]);});
+	$('cInstall').checked=o.installFile;
+});
+rt.post('GetOptions',{installFile:0});
 rt.listen('UpdateItem',function(o){
-	_data.load();var n=_data.map[o.id];
+	var n=o.obj;map[n.id]=n;
 	switch(o.cmd){
-		case 'add':addItem(n);break;
+		case 'add':ids.push(n.id);addItem(n);break;
 		case 'update':loadItem(L.childNodes[o.data],n,o.message);break;
 	}
 });
-fillHeight(L,$('footer'),document.body);

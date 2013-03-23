@@ -1,22 +1,24 @@
-var updated=0,style=null,styles={};
-function getKeys(d){var k=[];for(i in d) k.push(i);return k;}
 var p=document.createElement('p');
 p.setAttribute('onclick','return window;');
 var unsafeWindow=p.onclick();
 delete p;
 
 // Message
-var id=Date.now()+Math.random().toString().substr(1);
-function post(topic,data){
-	rt.post(topic,{source:id,origin:window.location.href,data:data});
+var id=Date.now()+Math.random().toString().substr(1),frames=[{source:id,origin:window.location.href}];
+function post(topic,data,o){
+	rt.post(topic,{source:o&&o.id||id,origin:o&&o.origin||window.location.href,data:data});
 }
 rt.listen(id,function(o){
-	if(o.topic=='ConfirmInstall') {
+	if(o.topic=='LoadedStyle') loadStyle(o.data);
+	else if(o.topic=='CheckedStyle') {
+		if(o.data){
+			if(!o.data.updated||o.data.updated<updated) unsafeWindow.fireCustomEvent('styleCanBeUpdated');
+			else unsafeWindow.fireCustomEvent('styleAlreadyInstalledChrome');
+		} else unsafeWindow.fireCustomEvent('styleCanBeInstalledChrome');
+	} else if(o.topic=='ConfirmInstall') {
 		if(o.data&&confirm(o.data)) {
 			if(installCallback) installCallback(); else {
-				var id=Date.now()+Math.random().toString().substr(1);
-				_data.temp[id]=document.body.innerText;_data.save();
-				post('ParseFirefoxCSS',{id:id});
+				post('ParseFirefoxCSS',document.body.innerText);
 			}
 		}
 	} else if(o.topic=='ParsedCSS') {
@@ -26,74 +28,64 @@ rt.listen(id,function(o){
 });
 function setPopup(){
 	post('SetPopup',{
-		styles:getKeys(styles),
-		astyles:getKeys(astyles),
+		styles:_styles,
+		astyles:Object.getOwnPropertyNames(astyles),
 		cstyle:cur
 	});
 };
-unsafeWindow[guid+'GetPopup']=setPopup;
+if(window===window.top) {
+	window.addEventListener('message',function(e){
+		e=e.data;
+		if(e) switch(e.topic){
+			case 'Stylish_UpdateStyle':
+				post('LoadStyle',{id:e.data,frames:frames});
+				break;
+			case 'Stylish_GetPopup':
+				setPopup();
+				break;
+			case 'Stylish_FindFrameStyles':
+				frames.push(e.data);
+				post('LoadStyle',null,e.data);
+				break;
+			case 'Stylish_FrameStyles':
+				for(var i in e.data) if(e.data[i]>0) styleAdd(i); else styleRemove(i);
+				break;
+		}
+	},false);
+}
 
 // CSS applying
-function loadStyle(e){
-	if(!style) {
-		style=document.createElement('style');
-		style.setAttribute('type', 'text/css');
-		document.documentElement.appendChild(style);
-	}
-	if(styles) {
-		var i,c=[];
-		for(i in styles) c.push(styles[i]);
-		style.innerHTML=c.join('');
-	}
+var isApplied=true,style=null,styles={},_styles=[],fstyles={};
+function styleAdd(i){
+	if(!(i in fstyles)) {fstyles[i]=0;_styles.push(i);}fstyles[i]++;
 }
-unsafeWindow[guid+'UpdateStyle']=function(d){
-	if(d) {
-		_data.load();
-		var c=testURL(window.location.href,_data.map[d]);
-		if(typeof c=='string') styles[d]=c; else delete styles[d];
-		loadStyle();
+function styleRemove(i){
+	if(i in fstyles) {fstyles[i]--;if(!fstyles[i]) _styles.splice(_styles.indexOf(i),1);}
+}
+function loadStyle(o){
+	var i,c;
+	if('isApplied' in o) isApplied=o.isApplied;
+	if(o.data) {
+		for(i in o.data)
+			if(typeof o.data[i]=='string') {styles[i]=o.data[i];o.data[i]=1;styleAdd(i);}
+			else {delete styles[i];o.data[i]=-1;styleRemove(i);}
+		if(window!==window.top) unsafeExecute('window.top.postMessage({topic:"Stylish_FrameStyles",data:'+JSON.stringify(o.data)+'},"*");');
+	}
+	if(isApplied) {
+		if(!style) {
+			style=document.createElement('style');
+			document.documentElement.appendChild(style);
+		}
+		if(styles) {
+			c=[];for(i in styles) c.push(styles[i]);
+			style.innerHTML=c.join('');
+		}
 	} else if(style) {
 		document.documentElement.removeChild(style);
 		style=null;
-	} else loadStyle();
-};
-function testURL(url,e){
-	function str2RE(s){return s.replace(/(\.|\?|\/)/g,'\\$1').replace(/\*/g,'.*?');}
-	function testDomain(){
-		r=d.domains;
-		for(i=0;i<r.length;i++) if(RegExp('://(|[^/]*\\.)'+r[i].replace(/\./g,'\\.')+'/').test(url)) return f=1;
-		if(i&&f<0) f=0;
 	}
-	function testRegexp(){
-		r=d.regexps;
-		for(i=0;i<r.length;i++) if(RegExp(r[i]).test(url)) return f=1;
-		if(i&&f<0) f=0;
-	}
-	function testUrlPrefix(){
-		r=d.urlPrefixes;
-		for(i=0;i<r.length;i++) if(url.substr(0,r[i].length)==r[i]) return f=1;
-		if(i&&f<0) f=0;
-	}
-	function testUrl(){
-		r=d.urls;
-		for(i=0;i<r.length;i++) if(r[i]==url) return f=1;
-		if(i&&f<0) f=0;
-	}
-	var k,f,d,i,r,c=[];
-	if(e) for(k=0;k<e.data.length;k++){
-		d=e.data[k];f=-1;
-		testDomain();testRegexp();testUrlPrefix();testUrl();
-		if(f) c.push(e.enabled?d.code:'');
-	}
-	if(c.length) return c.join('');
 }
-(function(url){
-	if(url.substr(0,5)!='data:') _data.ids.forEach(function(i){
-		var d=testURL(url,_data.map[i]);
-		if(typeof d=='string') styles[i]=d;
-	});
-	if(_data.data.isApplied) loadStyle();
-})(window.location.href);
+if(window===window.top) post('LoadStyle');
 
 // Alternative style sheets
 var astyles={},cur=undefined;
@@ -137,17 +129,9 @@ function fixMaxthon(){
 	var id=getData('stylish-id-url'),metaUrl=id+'.json';
 	var req = new window.XMLHttpRequest();
 	req.open('GET',metaUrl,true);
-	req.onload=function(){
-		try{
-			updated=getTime(JSON.parse(req.responseText));
-		} catch(e) {
-			alert('Oops! Failed checking for update!');updated=0;
-		}
-		var c=_data.map[id];
-		if(c){
-			if(!c.updated||c.updated<updated) unsafeWindow.fireCustomEvent('styleCanBeUpdated');
-			else unsafeWindow.fireCustomEvent('styleAlreadyInstalledChrome');
-		} else unsafeWindow.fireCustomEvent('styleCanBeInstalledChrome');
+	req.onloadend=function(){
+		if(this.status==200) try{updated=getTime(JSON.parse(req.responseText));} catch(e) {}
+		post('CheckStyle',id);
 	};
 	req.send();
 
@@ -169,7 +153,7 @@ function fixMaxthon(){
 	unsafeWindow.addCustomEventListener('stylishInstallChrome',install);
 	unsafeWindow.addCustomEventListener('stylishUpdate',update);
 }
-var installCallback=null;
+var installCallback=null,updated=0;
 if(/\.user\.css$/.test(window.location.href)) (function(){
 	function install(){
 		if(document&&document.body&&!document.querySelector('title')) post('InstallStyle');
