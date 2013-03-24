@@ -101,7 +101,7 @@ function alterStyle(s){
 window.addEventListener('DOMContentLoaded',function(){
 	Array.prototype.forEach.call(document.querySelectorAll('link[rel=stylesheet][title]'),addStylesheet);
 	Array.prototype.forEach.call(document.querySelectorAll('link[rel="alternate stylesheet"][title]'),addStylesheet);
-	setPopup();
+	post('GetPopup');
 },false);
 
 // Stylish fix

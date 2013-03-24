@@ -38,7 +38,15 @@ function alterStyle(i){
 	if(i==_title) cur=d;
 }
 var isApplied=getItem('isApplied');
-function getPopup(){br.executeScript('unsafeExecute(\'window.top.postMessage({topic:"Stylish_GetPopup"},"*");\');');}
+function getPopup(){
+	getPopup.flag++;	// avoid frequent asking for popup menu
+	setTimeout(function(){
+		if(!--getPopup.flag) {
+			br.executeScript('unsafeExecute(\'window.top.postMessage({topic:"Stylish_GetPopup"},"*");\');');
+		}
+	},200);
+}
+getPopup.flag=0;
 function load(o){
 	tab=o?o.source:null;
 	pT.innerHTML=pB.innerHTML=cT.innerHTML=cB.innerHTML='';
