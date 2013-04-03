@@ -230,7 +230,7 @@ function check(i){
 	req.send();
 }
 
-// Script Editor
+// CSS Editor
 var M=$('editor'),S=$('mSection'),I=$('mName'),
     rD=$('mDomain'),rR=$('mRegexp'),rP=$('mUrlPrefix'),rU=$('mUrl'),
     dM=$('mDeMoz'),dW=$('mDeWebkit');
@@ -303,7 +303,8 @@ function mSave(){
 }
 function mShow(){
 	var c=S.childNodes[S.cur];
-	rD.disabled=rR.disabled=rP.disabled=rU.disabled=T.getWrapperElement().disabled=!c;
+	rD.disabled=rR.disabled=rP.disabled=rU.disabled=!c;
+	T.setOption('readOnly',!c&&'nocursor');
 	if(c) {
 		S.childNodes[S.cur].classList.add('selected');
 		rD.value=M.data[S.cur].domains.join('\n');

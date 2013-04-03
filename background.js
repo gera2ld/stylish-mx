@@ -159,7 +159,7 @@ function parseCSS(o){
 	rt.post(o.source,{topic:'ParsedCSS',data:r});
 	if(c) updateItem(t,i,c,_('Style updated.')); else return r.message;
 }
-rt.listen('NewStyle',function(o){rt.post('GotStyle',newStyle(null,true).id);});
+rt.listen('NewStyle',function(o){rt.post('GotStyle',newStyle(null,true));});
 rt.listen('ImportZip',function(b){
 	var z=new JSZip();
 	try{z.load(b,{base64:true});}catch(e){rt.post('ShowMessage',_('Error loading zip file.'));return;}
