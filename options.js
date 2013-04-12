@@ -18,11 +18,6 @@ function getTime(r){
 function getName(n){
 	return n.name?n.name.replace(/&/g,'&amp;').replace(/</g,'&lt;'):'<em>'+_('Null name')+'</em>';
 }
-function fillHeight(e,b,p){
-	if(p==undefined) p=e.parentNode;
-	b=b?b.offsetTop+b.offsetHeight:0;
-	e.style.pixelHeight=e.offsetHeight+window.getComputedStyle(p).pixelHeight-b;
-}
 
 // Main options
 function loadName(d,n){
@@ -234,7 +229,6 @@ function check(i){
 var M=$('editor'),S=$('mSection'),I=$('mName'),
     rD=$('mDomain'),rR=$('mRegexp'),rP=$('mUrlPrefix'),rU=$('mUrl'),
     dM=$('mDeMoz'),dW=$('mDeWebkit');
-M.style.pixelHeight=window.innerHeight;
 var T=CodeMirror.fromTextArea($('mCode'),{
 	lineNumbers:true,
 	matchBrackets:true,
@@ -244,11 +238,6 @@ var T=CodeMirror.fromTextArea($('mCode'),{
 	indentWithTabs:true,
 	extraKeys:{"Enter":"newlineAndIndentContinueComment"}
 });
-T.resize=function(){
-	var w=this.getWrapperElement();
-	fillHeight(w,w.nextElementSibling);
-	w.style.width=w.parentNode.clientWidth+'px';
-};
 function cloneData(d){
 	var c=[];
 	d.forEach(function(i){
@@ -263,13 +252,13 @@ function cloneData(d){
 	return c;
 }
 function edit(i){
-	switchTo(M);fillHeight(S,S.nextElementSibling);
+	switchTo(M);
 	M.cur=i;M.dirty=false;M.css=map[ids[M.cur]];
 	M.data=cloneData(M.css.data);
 	S.innerHTML='';S.cur=0;S.dirty=false;
 	I.value=M.css.name;
 	for(var i=0;i<M.data.length;i++) mAddItem(i+1);
-	T.resize();mShow();
+	mShow();
 }
 function mAddItem(n){
 	var d=document.createElement('div');
@@ -357,7 +346,6 @@ $('mSaveClose').onclick=function(){
 M.close=$('mClose').onclick=function(){if(confirmCancel(M.dirty||!T.isClean())) mClose();};
 
 // Load at last
-fillHeight(L,$('footer'),document.body);
 var ids,map;L.innerHTML='';
 rt.listen('GotOptions',function(o){
 	ids=o.ids;map=o.map;
