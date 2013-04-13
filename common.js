@@ -16,7 +16,7 @@ function initFont(){
 }
 function unsafeExecute(id,funcName,args){
 	if(!id) id=br.tabs.getCurrentTab().id;
-	br.executeScript('var p=document.createElement("script");p.innerHTML=\'(function(p){p&&p('+JSON.stringify(args)+');})(window["'+guid+funcName+'"]);\';document.documentElement.appendChild(p);document.documentElement.removeChild(p);',id);
+	br.executeScript('(function(p){p=document.createElement("script");p.innerHTML=\'(function(p){p&&p('+JSON.stringify(args)+');})(window["'+guid+funcName+'"]);\';document.documentElement.appendChild(p);document.documentElement.removeChild(p);})();',id);
 }
 function unsafeBroadcast(funcName,args){var j,t;for(j=0;t=br.tabs.getTab(j);j++)unsafeExecute(t.id,funcName,args);}
 

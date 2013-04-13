@@ -70,12 +70,14 @@ function load(o){
 		pT.appendChild(document.createElement('hr'));
 		d.styles.forEach(menuStyle);
 	}
+	if(!o) getPopup();
 }
 function getPopup(){unsafeExecute(null,'GetPopup');}
+rt.listen('GetPopup',getPopup);
 rt.listen('SetPopup',load);
 br.onBrowserEvent=function(o){
 	switch(o.type){
 		case 'TAB_SWITCH': getPopup();
 	}
 };
-initFont();load();getPopup();
+initFont();load();

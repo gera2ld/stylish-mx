@@ -34,28 +34,28 @@ function setPopup(){
 unsafeWindow[guid+'GetPopup']=setPopup;
 
 // CSS applying
-function loadStyle(e){
-	if(!style) {
-		style=document.createElement('style');
-		style.setAttribute('type', 'text/css');
-		document.documentElement.appendChild(style);
-	}
-	if(styles) {
+function loadStyle(){
+	if(_data.data.isApplied) {
+		if(!style) {
+			style=document.createElement('style');
+			style.setAttribute('type', 'text/css');
+			document.documentElement.appendChild(style);
+		}
 		var i,c=[];
 		for(i in styles) c.push(styles[i]);
 		style.innerHTML=c.join('');
-	}
-}
-unsafeWindow[guid+'UpdateStyle']=function(d){
-	if(d) {
-		_data.load();
-		var c=testURL(window.location.href,_data.map[d]);
-		if(typeof c=='string') styles[d]=c; else delete styles[d];
-		loadStyle();
 	} else if(style) {
 		document.documentElement.removeChild(style);
 		style=null;
-	} else loadStyle();
+	}
+}
+unsafeWindow[guid+'UpdateStyle']=function(d){
+	_data.load();
+	if(d) {
+		var c=testURL(window.location.href,_data.map[d]);
+		if(typeof c=='string') styles[d]=c; else delete styles[d];
+	}
+	loadStyle();
 };
 function testURL(url,e){
 	function str2RE(s){return s.replace(/(\.|\?|\/)/g,'\\$1').replace(/\*/g,'.*?');}
@@ -92,7 +92,7 @@ function testURL(url,e){
 		var d=testURL(url,_data.map[i]);
 		if(typeof d=='string') styles[i]=d;
 	});
-	if(_data.data.isApplied) loadStyle();
+	loadStyle();
 })(window.location.href);
 
 // Alternative style sheets
@@ -109,7 +109,7 @@ function alterStyle(s){
 window.addEventListener('DOMContentLoaded',function(){
 	Array.prototype.forEach.call(document.querySelectorAll('link[rel=stylesheet][title]'),addStylesheet);
 	Array.prototype.forEach.call(document.querySelectorAll('link[rel="alternate stylesheet"][title]'),addStylesheet);
-	setPopup();
+	post('GetPopup');
 },false);
 
 // Stylish fix
