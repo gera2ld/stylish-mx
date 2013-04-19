@@ -1,12 +1,12 @@
-@import url(font.css);
 html,body{background:#eee;}
 h1,h2{text-shadow:#999 3px 3px 5px;}
 a{color:dodgerblue;}
 .center{text-align:center;}
 .float,.frame{position:fixed;background:lightgray;}
-.frame{left:0;right:0;top:0;bottom:0;table-layout:fixed;width:100%;height:100%;}
+.popup table,.frame{left:0;right:0;top:0;bottom:0;table-layout:fixed;width:100%;height:100%;}
 .float{margin:0 auto;padding:10px;border-radius:10px;border-spacing:10px;}
-.fill{width:100%;height:100%;margin:0;padding:0;overflow:hidden;}
+.popup,.fill{height:100%;margin:0;padding:0;}
+.popup .expand>td{border-top:1px dashed gray;}
 .em{font-style:italic;}
 .new{color:red;}
 .menu,.ellipsis{white-space:nowrap;text-overflow:ellipsis;overflow:hidden;}
@@ -25,7 +25,7 @@ tr.expand{height:auto;}
 #main{background:transparent;width:800px;margin:0 auto;}
 #advanced label{display:block;}
 #main fieldset{position:relative;height:100%;padding:0;}
-legend{margin-left:10px;}
+#main legend{margin-left:10px;}
 textarea,input[type=text]{width:100%;border:none;margin:0;padding:0;}
 fieldset{border-radius:5px;}
 #sList{overflow-x:hidden;overflow-y:auto;position:absolute;top:22px;left:0;right:0;bottom:10px;}
@@ -59,7 +59,6 @@ fieldset{border-radius:5px;}
 .menu>div.disabled{color:gray;}
 .menu>div.disabled:hover{color:silver;}
 .menu>div span{display:inline-block;width:20px;}
-.menu>hr{border:none;border-top:1px dashed gray;}
 #mCode{font-family:monospace;}
 #dImport{position:relative;}
 #aImport{display:block;position:absolute;width:100%;height:100%;cursor:default;opacity:0;top:0;left:0;}

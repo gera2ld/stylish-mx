@@ -1,7 +1,7 @@
 function $(i){return document.getElementById(i);}
-var P=$('popup'),A=$('astyles'),tab,
-	pT=P.querySelector('.top'),pB=P.querySelector('.bot'),
-	cT=A.querySelector('.top'),cB=A.querySelector('.bot');
+var P=$('popup'),A=$('astyles'),tab,pR=P.querySelector('.expand'),
+	pT=P.querySelector('td'),pB=P.querySelector('.expanda'),
+	cT=A.querySelector('td'),cB=A.querySelector('.expanda');
 function loadItem(d,c){
 	if(c) {
 		d.firstChild.innerText=d.symbol;
@@ -62,11 +62,9 @@ function load(o){
 		addItem(_('Back'),true,{holder:cT,symbol:'◄',onclick:function(){
 			A.classList.add('hide');P.classList.remove('hide');
 		}});
-		cT.appendChild(document.createElement('hr'));
 		d.astyles.forEach(alterStyle);
 		addItem(_('Alter stylesheet...'),true,{holder:pT,symbol:'➤',onclick:function(){
 			P.classList.add('hide');A.classList.remove('hide');
-			setTimeout(function(){cB.style.pixelHeight=innerHeight-cB.offsetTop;},0);
 		}});
 	}
 	addItem(_('Enable styles'),true,{holder:pT,data:isApplied,onclick:function(){
@@ -74,9 +72,9 @@ function load(o){
 		unsafeBroadcast('window.top.postMessage({topic:"Stylish_UpdateStyle",data:"Stylish_All"},"*");');
 	}});
 	if(d&&d.styles&&d.styles.length) {
-		pT.appendChild(document.createElement('hr'));
+		pR.classList.remove('hide');
 		d.styles.forEach(menuStyle);
-	}
+	} else pR.classList.add('hide');
 	if(!o) getPopup();
 }
 initFont();
@@ -89,7 +87,4 @@ br.onBrowserEvent=function(o){
 		case 'ON_NAVIGATE':
 			load();
 	}
-};
-rt.onAppEvent=function(o){
-	if(o.type=='ACTION_SHOW') pB.style.pixelHeight=innerHeight-pB.offsetTop;
 };
