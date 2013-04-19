@@ -4,7 +4,15 @@ var unsafeWindow=p.onclick();
 delete p;
 
 // Message
-var id=Date.now()+Math.random().toString().substr(1),frames=[{source:id,origin:window.location.href}];
+var rt=window.external.mxGetRuntime(),
+		id=Date.now()+Math.random().toString().substr(1),
+		frames=[{source:id,origin:window.location.href}];
+function unsafeExecute(scr){
+	var p=document.createElement("script");
+	p.innerHTML=scr;
+	document.documentElement.appendChild(p);
+	document.documentElement.removeChild(p);
+}
 function post(topic,data,o){
 	rt.post(topic,{source:o&&o.id||id,origin:o&&o.origin||window.location.href,data:data});
 }

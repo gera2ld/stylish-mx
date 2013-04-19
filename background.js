@@ -64,8 +64,8 @@ rt.listen('RemoveStyle',function(i){
 function updateItem(t,i,o,m){rt.post('UpdateItem',{cmd:t,data:i,obj:o,message:m});}
 
 rt.listen('SaveStyle',saveStyle);
-rt.listen('EnableStyle',function(o,e){
-	e=map[o.id];e.enabled=o.data;saveStyle(e);
+rt.listen('EnableStyle',function(e,o){
+	o=map[e.id];o.enabled=e.data;saveStyle(o);
 	updateItem('update',ids.indexOf(o.id),o);
 });
 function parseFirefoxCSS(o){

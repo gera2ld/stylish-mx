@@ -1,5 +1,4 @@
-var rt=window.external.mxGetRuntime(),br=rt.create('mx.browser'),
-    guid='__{25d5eed5-1c91-4dde-ba91-9b6c9f786b1f}_';
+var rt=window.external.mxGetRuntime(),br=rt.create('mx.browser');
 function format(){
 	var a=arguments;
 	if(a[0]) return a[0].replace(/\$(?:\{(\d+)\}|(\d+))/g,function(v,g1,g2){g1=a[g1||g2];if(g1==undefined) g1=v;return g1;});
@@ -13,12 +12,6 @@ function initFont(){
 	var s=document.createElement('style');
 	s.innerHTML=_('__font');
 	document.head.appendChild(s);
-}
-function unsafeExecute(scr){
-	var p=document.createElement("script");
-	p.innerHTML=scr;
-	document.documentElement.appendChild(p);
-	document.documentElement.removeChild(p);
 }
 function unsafeBroadcast(scr){
 	scr='unsafeExecute('+JSON.stringify(scr)+');';
