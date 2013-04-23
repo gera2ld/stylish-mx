@@ -41,9 +41,7 @@ var isApplied=getItem('isApplied');
 function getPopup(){
 	getPopup.flag++;	// avoid frequent asking for popup menu
 	setTimeout(function(){
-		if(!--getPopup.flag) {
-			br.executeScript('unsafeExecute(\'window.top.postMessage({topic:"Stylish_GetPopup"},"*");\');');
-		}
+		if(!--getPopup.flag) br.executeScript('unsafeExecute({topic:"Stylish_GetPopup"});');
 	},200);
 }
 getPopup.flag=0;
@@ -69,7 +67,7 @@ function load(o){
 	}
 	addItem(_('Enable styles'),true,{holder:pT,data:isApplied,onclick:function(){
 		loadItem(this,setItem('isApplied',isApplied=!isApplied));
-		unsafeBroadcast('window.top.postMessage({topic:"Stylish_UpdateStyle",data:"Stylish_All"},"*");');
+		unsafeBroadcast({topic:'Stylish_UpdateStyle',data:'Stylish_All'});
 	}});
 	if(d&&d.styles&&d.styles.length) {
 		pR.classList.remove('hide');

@@ -7,9 +7,9 @@ delete p;
 var rt=window.external.mxGetRuntime(),
 		id=Date.now()+Math.random().toString().substr(1),
 		frames=[{source:id,origin:window.location.href}];
-function unsafeExecute(scr){
+function unsafeExecute(d){
 	var p=document.createElement("script");
-	p.innerHTML=scr;
+	p.innerHTML='Window.prototype.postMessage.call(window.top,'+JSON.stringify(d)+',"*");';
 	document.documentElement.appendChild(p);
 	document.documentElement.removeChild(p);
 }
@@ -77,7 +77,7 @@ function loadStyle(o){
 		for(i in o.data)
 			if(typeof o.data[i]=='string') {styles[i]=o.data[i];o.data[i]=1;styleAdd(i);}
 			else {delete styles[i];o.data[i]=-1;styleRemove(i);}
-		if(window!==window.top) unsafeExecute('window.top.postMessage({topic:"Stylish_FrameStyles",data:'+JSON.stringify(o.data)+'},"*");');
+		if(window!==window.top) unsafeExecute({topic:'Stylish_FrameStyles',data:o.data});
 	}
 	if(isApplied) {
 		if(!style) {
