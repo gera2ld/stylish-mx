@@ -11,27 +11,30 @@ function loadItem(d,c){
 		d.classList.add('disabled');
 	}
 }
-function addItem(h,t,c){
-	var d=document.createElement('div'),s='';
+function addItem(h,c){
+	var d=document.createElement('div');
 	d.innerHTML='<span></span>'+h;
-	if(t) {if(typeof t!='string') t=h;d.title=t;}
+	if('title' in c) {
+		d.title=typeof c.title=='string'?c.title:h;
+		delete c.title;
+	}
 	d.className='ellipsis';
 	c.holder.appendChild(d);
 	if('symbol' in c) d.firstChild.innerText=c.symbol;
 	else if('data' in c) c.symbol='✓';
-	for(t in c) d[t]=c[t];
+	for(h in c) d[h]=c[h];
 	if('data' in c) loadItem(d,c.data);
 	return d;
 }
 function menuStyle(i) {
 	var c=getItem('us:'+i),n=c.name?c.name.replace(/&/g,'&amp;').replace(/</g,'&lt;'):'<em>'+_('Null name')+'</em>';
-	addItem(n,c.name,{holder:pB,data:c.enabled,onclick:function(){
+	addItem(n,{holder:pB,data:c.enabled,title:c.name,onclick:function(){
 		loadItem(this,c.enabled=!c.enabled);rt.post('EnableStyle',{id:i,data:c.enabled});
 	}});
 }
 var cur=null,_title;
 function alterStyle(i){
-	var d=addItem(i,true,{holder:cB,data:i==_title,onclick:function(){
+	var d=addItem(i,{holder:cB,data:i==_title,title:true,onclick:function(){
 		if(cur) loadItem(cur,false);loadItem(cur=this,true);
 		if(tab) rt.post(tab,{topic:'AlterStyle',data:i});
 	}});
@@ -48,24 +51,24 @@ getPopup.flag=0;
 function load(o){
 	tab=o?o.source:null;
 	pT.innerHTML=pB.innerHTML=cT.innerHTML=cB.innerHTML='';
-	addItem(_('Manage styles'),true,{holder:pT,symbol:'➤',onclick:function(){
+	addItem(_('Manage styles'),{holder:pT,symbol:'➤',title:true,onclick:function(){
 		br.tabs.newTab({url:rt.getPrivateUrl()+'options.html',activate:true});
 	}});
-	if(o) addItem(_('Find styles for this site'),true,{holder:pT,symbol:'➤',onclick:function(){
+	if(o) addItem(_('Find styles for this site'),{holder:pT,symbol:'➤',title:true,onclick:function(){
 		br.tabs.newTab({url:'http://userstyles.org/styles/search/'+encodeURIComponent(br.tabs.getCurrentTab().url),activate:true});
 	}});
 	var d=o&&o.data;
 	if(d&&d.astyles&&d.astyles.length) {
 		_title=d.cstyle||'';
-		addItem(_('Back'),true,{holder:cT,symbol:'◄',onclick:function(){
+		addItem(_('Back'),{holder:cT,symbol:'◄',title:true,onclick:function(){
 			A.classList.add('hide');P.classList.remove('hide');
 		}});
 		d.astyles.forEach(alterStyle);
-		addItem(_('Alter stylesheet...'),true,{holder:pT,symbol:'➤',onclick:function(){
+		addItem(_('Alter stylesheet...'),{holder:pT,symbol:'➤',title:true,onclick:function(){
 			P.classList.add('hide');A.classList.remove('hide');
 		}});
 	}
-	addItem(_('Enable styles'),true,{holder:pT,data:isApplied,onclick:function(){
+	addItem(_('Enable styles'),{holder:pT,data:isApplied,title:true,onclick:function(){
 		loadItem(this,setItem('isApplied',isApplied=!isApplied));
 		unsafeBroadcast({topic:'Stylish_UpdateStyle',data:'Stylish_All'});
 	}});

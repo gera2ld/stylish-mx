@@ -26,7 +26,7 @@ function loadName(d,n){
 	a.title=n.name;
 	a.innerHTML=getName(n);
 }
-function loadItem(d,n,m){
+function loadItem(d,n,r){
 	d.innerHTML='<a class="name ellipsis" target=_blank></a>'
 	+'<span class=updated>'+(n.updated?_('Last updated: ')+getDate(n.updated):'')+'</span>'
 	+(n.metaUrl?'<a href=# data=update class=update>'+_('Check for updates')+'</a> ':'')
@@ -38,7 +38,7 @@ function loadItem(d,n,m){
 	+'</div>';
 	d.className=n.enabled?'':'disabled';
 	loadName(d,n);
-	if(m) d.querySelector('.message').innerHTML=m;
+	if(r&&r.message) d.querySelector('.message').innerHTML=r.message;
 }
 function addItem(n){
 	var d=document.createElement('div');
@@ -197,8 +197,7 @@ function check(i){
 		req=new window.XMLHttpRequest();
 		req.open('GET', c.updateUrl, true);
 		req.onload=function(){
-			rt.listen('UpdatedCSS'+c.id,function(r){if(r) m.innerHTML=r;});
-			rt.post('ParseCSS',{source:'UpdatedCSS'+c.id,data:{status:req.status,id:c.id,updated:d,code:req.responseText}});
+			rt.post('ParseCSS',{data:{status:req.status,id:c.id,updated:d,code:req.responseText}});
 			o.classList.remove('hide');
 		};
 		req.send();
@@ -210,7 +209,7 @@ function check(i){
 			d=getTime(JSON.parse(this.responseText));
 			if(!c.updated||c.updated<d) {
 				if(c.updateUrl) return update();
-				else m.innerHTML='<a class=new title="'+_('Please go to homepage for update since there are options for this style.')+'">'+_('New version found.')+'</a>';
+				else m.innerHTML='<span class=new title="'+_('Please go to homepage for update since there are options for this style.')+'">'+_('New version found.')+'</span>';
 			} else m.innerHTML=_('No update found.');
 		} catch(e) {
 			m.innerHTML=_('Failed fetching update information.');
@@ -351,10 +350,12 @@ rt.listen('GotOptions',function(o){
 	$('cInstall').checked=o.installFile;
 });
 rt.post('GetOptions',{installFile:0});
-rt.listen('UpdateItem',function(o){
-	var n=o.obj;map[n.id]=n;
-	switch(o.cmd){
-		case 'add':ids.push(n.id);addItem(n);break;
-		case 'update':loadItem(L.childNodes[o.data],n,o.message);break;
+rt.listen('UpdateItem',function(r){
+	if(!('item' in r)||r.item<0) return;
+	if(r.obj) map[r.obj.id]=r.obj;
+	switch(r.status){
+		case 0:loadItem(L.childNodes[r.item],r.obj,r);break;
+		case 1:ids.push(r.obj.id);addItem(r.obj);break;
+		default:modifyItem(L.childNodes[r.item],r);
 	}
 });

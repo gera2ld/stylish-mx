@@ -61,15 +61,14 @@ rt.listen('RemoveStyle',function(i){
 	delete map[i];localStorage.removeItem('us:'+i);
 	unsafeBroadcast({topic:'Stylish_UpdateStyle',data:i});
 });
-function updateItem(t,i,o,m){rt.post('UpdateItem',{cmd:t,data:i,obj:o,message:m});}
 
 rt.listen('SaveStyle',saveStyle);
 rt.listen('EnableStyle',function(e,o){
 	o=map[e.id];o.enabled=e.data;saveStyle(o);
-	updateItem('update',ids.indexOf(o.id),o);
+	rt.post('UpdateItem',{status:2,item:ids.indexOf(o.id),obj:o});
 });
 function parseFirefoxCSS(o){
-	var c=null,i,p,m,r,code=o.data,data=[],d={},t;
+	var c=null,i,p,m,r,code=o.data,data=[],d={};
 	code.replace(/\/\*\s+@(\w+)\s+(.*?)\s+\*\//g,function(v,g1,g2){
 		if(d[g1]==undefined) {
 			d[g1]=g2;
@@ -96,20 +95,21 @@ function parseFirefoxCSS(o){
 		code=code.slice(i+1).replace(/^\s+/,'');
 		data.push(r);
 	}
-	r={error:0};
+	r={status:0,message:_('Style updated.')};
+	if(d.id) r.item=ids.indexOf(d.id);
 	if(!code) {
 		if(d.id) c=map[d.id];
 		else d.id=Date.now()+Math.random().toString().substr(1);
-		if(!c) {c=newStyle(d);t='add';}
-		else {for(i in d) c[i]=d[i];t='update';}
+		if(!c) {c=newStyle(d);r.status=1;}
+		else for(i in d) c[i]=d[i];
 		c.data=data;saveStyle(c);
+		r.item=ids.indexOf(c.id);r.obj=c;
 	} else {
-		r.error=-1;
+		r.status=-1;
 		r.message=_('Error parsing CSS code!');
 	}
-	if(o.source) rt.post(o.source,{topic:'ParsedCSS',data:r});
-	if(c) updateItem(t,ids.indexOf(c.id),c,_('Style updated.'));
-	else return r.message;
+	if(o.source) rt.post(o.source,{topic:'ParsedCSS',data:{error:r.status<0,message:r.message}});
+	rt.post('UpdateItem',r);
 }
 function fetchURL(url, load){
 	var req=new XMLHttpRequest();
@@ -125,10 +125,16 @@ function fetchURL(url, load){
 	}
 }
 function parseCSS(o){
-	var d=o.data,i,j,c,data=[],r={error:0},t='update';
-	if(d.status&&d.status!=200) {r.error=-1;r.message=_('Error fetching CSS code!');}
+	var d=o.data,j=null,c,data=[],r={status:0,message:_('Style updated.')};
+	if(d.id) r.item=ids.indexOf(d.id);
+	if(d.status&&d.status!=200) {r.status=-1;r.message=_('Error fetching CSS code!');}
 	else try{
-		i=d.id;j=JSON.parse(d.code);
+		j=JSON.parse(d.code);
+	}catch(e){
+		r.message=_('Error parsing CSS code!')+'\n'+e.stack;
+		r.status=-1;
+	}
+	if(j) {
 		j.sections.forEach(function(i){
 			data.push({
 				domains:i.domains,
@@ -138,26 +144,21 @@ function parseCSS(o){
 				code:i.code
 			});
 		});
-		if(i&&(c=map[i])) {
-			i=ids.indexOf(i);
+		if(d.id&&(c=map[d.id])) {
+			r.item=ids.indexOf(d.id);
 			c.updated=d.updated;
 		} else {
+			r.item=ids.length;
 			d.name=j.name;
 			d.enabled=1;
 			c=newStyle(d);
-			t='add';
+			r.status=1;
 		}
-		c.data=data;
-		c.url=j.url;
-		c.updateUrl=j.updateUrl;
-		saveStyle(c);
-	}catch(e){
-		console.log(e);
-		r.message=_('Error parsing CSS code!');
-		r.error=-1;
+		c.data=data;c.url=j.url;c.updateUrl=j.updateUrl;
+		saveStyle(c);r.obj=c;
 	}
-	rt.post(o.source,{topic:'ParsedCSS',data:r});
-	if(c) updateItem(t,i,c,_('Style updated.')); else return r.message;
+	if(o.source) rt.post(o.source,{topic:'ParsedCSS',data:{error:r.status<0,message:r.message}});
+	rt.post('UpdateItem',r);
 }
 rt.listen('NewStyle',function(o){rt.post('GotStyle',newStyle(null,true));});
 rt.listen('ImportZip',function(b){

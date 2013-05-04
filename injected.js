@@ -8,7 +8,7 @@ var rt=window.external.mxGetRuntime(),
 		id=Date.now()+Math.random().toString().substr(1),
 		frames=[{source:id,origin:window.location.href}];
 function unsafeExecute(d){
-	var p=document.createElement("script");
+	var p=document.createElement('script');
 	p.innerHTML='Window.prototype.postMessage.call(window.top,'+JSON.stringify(d)+',"*");';
 	document.documentElement.appendChild(p);
 	document.documentElement.removeChild(p);
@@ -30,8 +30,8 @@ rt.listen(id,function(o){
 			}
 		}
 	} else if(o.topic=='ParsedCSS') {
-		if(!o.data.error) unsafeWindow.fireCustomEvent('styleInstalled');
-		else alert(o.data.message);
+		if(o.data.error) alert(o.data.message);
+		else unsafeWindow.fireCustomEvent('styleInstalled');
 	} else if(o.topic=='AlterStyle') alterStyle(o.data);
 });
 function setPopup(){
