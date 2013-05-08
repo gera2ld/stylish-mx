@@ -54,12 +54,12 @@ function newStyle(c,save){
 function saveStyle(o){
 	if(!map[o.id]) {ids.push(o.id);setItem('ids',ids);}
 	setItem('us:'+o.id,map[o.id]=o);
-	unsafeBroadcast({topic:'Stylish_UpdateStyle',data:o.id});
+	broadcast('updateStyle('+JSON.stringify(o.id)+');');
 }
 rt.listen('RemoveStyle',function(i){
 	i=ids.splice(i,1)[0];setItem('ids',ids);
 	delete map[i];localStorage.removeItem('us:'+i);
-	unsafeBroadcast({topic:'Stylish_UpdateStyle',data:i});
+	broadcast('updateStyle('+JSON.stringify(i)+');');
 });
 
 rt.listen('SaveStyle',saveStyle);

@@ -7,12 +7,6 @@ delete p;
 var rt=window.external.mxGetRuntime(),
 		id=Date.now()+Math.random().toString().substr(1),
 		frames=[{source:id,origin:window.location.href}];
-function unsafeExecute(d){
-	var p=document.createElement('script');
-	p.innerHTML='Window.prototype.postMessage.call(window.top,'+JSON.stringify(d)+',"*");';
-	document.documentElement.appendChild(p);
-	document.documentElement.removeChild(p);
-}
 function post(topic,data,o){
 	rt.post(topic,{source:o&&o.id||id,origin:o&&o.origin||window.location.href,data:data});
 }
@@ -41,25 +35,9 @@ function setPopup(){
 		cstyle:cur
 	});
 };
-if(window===window.top) {
-	window.addEventListener('message',function(e){
-		e=e.data;
-		if(e) switch(e.topic){
-			case 'Stylish_UpdateStyle':
-				post('LoadStyle',{id:e.data,frames:frames});
-				break;
-			case 'Stylish_GetPopup':
-				setPopup();
-				break;
-			case 'Stylish_FindFrameStyles':
-				frames.push(e.data);
-				post('LoadStyle',null,e.data);
-				break;
-			case 'Stylish_FrameStyles':
-				for(var i in e.data) if(e.data[i]>0) styleAdd(i); else styleRemove(i);
-				break;
-		}
-	},false);
+function updateStyle(i){
+	var o={frames:frames};if(i) o.id=i;
+	post('LoadStyle',o);
 }
 
 // CSS applying
@@ -77,7 +55,7 @@ function loadStyle(o){
 		for(i in o.data)
 			if(typeof o.data[i]=='string') {styles[i]=o.data[i];o.data[i]=1;styleAdd(i);}
 			else {delete styles[i];o.data[i]=-1;styleRemove(i);}
-		if(window!==window.top) unsafeExecute({topic:'Stylish_FrameStyles',data:o.data});
+		// TODO: post styles to top
 	}
 	if(isApplied) {
 		if(!style) {
@@ -93,7 +71,7 @@ function loadStyle(o){
 		style=null;
 	}
 }
-if(window===window.top) post('LoadStyle');
+post('LoadStyle');
 
 // Alternative style sheets
 var astyles={},cur=undefined;

@@ -13,9 +13,8 @@ function initFont(){
 	s.innerHTML=_('__font');
 	document.head.appendChild(s);
 }
-function unsafeBroadcast(scr){
-	scr='unsafeExecute('+JSON.stringify(scr)+');';
-	var j,t;for(j=0;t=br.tabs.getTab(j);j++) br.executeScript(scr,t.id);
+function broadcast(s){
+	var j,t;for(j=0;t=br.tabs.getTab(j);j++) br.executeScript(s,t.id);
 }
 
 function getItem(key,def){
