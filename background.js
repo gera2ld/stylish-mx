@@ -235,7 +235,10 @@ rt.listen('GetOptions',function(o){
 	o.forEach(function(i){r[i]=getItem(i);});
 	rt.post('GotOptions',r);
 });
-rt.listen('SetOptions',function(o){for(var i in o) setItem(i,o[i]);});
+rt.listen('SetOption',function(o){
+	if(o.wkey) window[o.wkey]=o.data;
+	(typeof o.data=='string'?setString:setItem)(o.key,o.data);
+});
 
 var optionsURL=new RegExp('^'+(rt.getPrivateUrl()+'options.html').replace(/\./g,'\\.'));
 br.onBrowserEvent=function(o){

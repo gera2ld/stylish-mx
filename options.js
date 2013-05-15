@@ -123,7 +123,8 @@ window.addEventListener('DOMContentLoaded',function(){
 // Advanced
 var A=$('advanced');
 $('bAdvanced').onclick=function(){showDialog(A);};
-$('cInstall').onchange=function(){rt.post('SetOptions',{installFile:this.checked});};
+$('cInstall').onchange=function(){rt.post('SetOption',{key:'installFile',data:this.checked});};
+$('cBackup').onchange=function(){rt.post('SetOption',{key:'autoBackup',data:this.checked});};
 $('aExport').onclick=function(){showDialog(X);xLoad();};
 $('aImport').onchange=function(e){
 	var i,f,files=e.target.files;
@@ -148,8 +149,8 @@ function xLoad() {
 		xL.appendChild(d);
 	});
 }
-xC.onchange=function(){rt.post('SetOptions',{compress:this.checked});};
-xF.onchange=function(){rt.post('SetOptions',{firefoxCSS:this.checked});};
+xC.onchange=function(){rt.post('SetOption',{key:'compress',data:this.checked});};
+xF.onchange=function(){rt.post('SetOption',{key:'firefoxCSS',data:this.checked});};
 xL.onclick=function(e){
 	var t=e.target;
 	if(t.parentNode!=this) return;
@@ -369,6 +370,7 @@ rt.listen('GotOptions',function(o){
 	ids=o.ids;map=o.map;
 	ids.forEach(function(i){addItem(map[i]);});
 	$('cInstall').checked=o.installFile;
+	$('cBackup').checked=o.autoBackup;
 	xC.checked=o.compress;
 	xF.checked=o.firefoxCSS;
 });
