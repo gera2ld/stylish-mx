@@ -231,9 +231,9 @@ rt.listen('LoadStyle',function(o){
 rt.listen('CheckStyle',function(o){rt.post(o.source,{topic:'CheckedStyle',data:map[o.data]});});
 
 rt.listen('GetOptions',function(o){
-	for(var i in o) o[i]=getItem(i);
-	o.ids=ids;o.map=map;
-	rt.post('GotOptions',o);
+	var r={ids:ids,map:map};
+	o.forEach(function(i){r[i]=getItem(i);});
+	rt.post('GotOptions',r);
 });
 rt.listen('SetOptions',function(o){for(var i in o) setItem(i,o[i]);});
 
