@@ -20,6 +20,26 @@
  * 		}
  */
 
+// Check Maxthon version
+(function(v){
+	if(getString('warnObsolete')) return;
+	setString('warnObsolete','1');
+	function older(a,b,c,d){
+		a=a.split('.');b=b.split('.');c=d=0;
+		while(a.length||b.length){
+			c=parseInt(a.shift())||0;
+			d=parseInt(b.shift())||0;
+			if(c!=d) break;
+		}
+		return c<d;
+	}
+	if(older(v,'4.0.3.5000')) {
+		mx.locale();
+		var v=mx.getSystemLocale(),o=['en','zh-cn'],i=o.indexOf(v);if(i<0) v=o[0];
+		br.tabs.newTab({url:rt.getPrivateUrl()+'oldversion/'+v+'.html',activate:true});
+	}
+})(window.external.mxVersion);
+
 // Initiate settings
 (function(){	// Upgrade data
 	var k,v=rt.storage.getConfig('data');
