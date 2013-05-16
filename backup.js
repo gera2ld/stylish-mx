@@ -1,12 +1,9 @@
 (function(){
-	if(getString('ids')) return;
+	if(localStorage.getItem('ids')) return;
 	// restore data from backup
 	if(v=rt.storage.getConfig('backup')) try{
 		v=JSON.parse(v);
-		for(k in v) {
-			if(/^cache:/.test(k)) v[k]=atob(v[k]);
-			localStorage.setItem(k,v[k]);
-		}
+		for(k in v) localStorage.setItem(k,v[k]);
 	}catch(e){}
 })();
 
@@ -14,21 +11,16 @@
 function initBackup(){
 	function save(){
 		if(!--count) {
-			var r={},i,k;
-			for(i=0;k=localStorage.key(i);i++) {
-				r[k]=localStorage.getItem(k);
-				if(/^cache:/.test(k)) r[k]=btoa(r[k]);
-			}
-			rt.storage.setConfig('backup',JSON.stringify(r));
+			rt.storage.setConfig('backup',JSON.stringify(localStorage));
 			_changed=false;
 		}
 	}
 	function backup(){count++;setTimeout(save,3e4);}
-	var _setString=setString,_changed=false,count=0;
-	setString=function(k,v){
+	var _setItem=setItem,_changed=false,count=0;
+	setItem=function(k,v){
 		_changed=true;
 		if(autoBackup) backup();
-		return _setString(k,v);
+		return _setItem(k,v);
 	};
 	autoBackup=getItem('autoBackup',false);
 	settings.o.push('autoBackup');

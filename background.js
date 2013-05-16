@@ -22,8 +22,8 @@
 
 // Check Maxthon version
 (function(v){
-	if(getString('warnObsolete')) return;
-	setString('warnObsolete','1');
+	if(getItem('warnObsolete',0)) return;
+	setItem('warnObsolete',1);
 	function older(a,b,c,d){
 		a=a.split('.');b=b.split('.');c=d=0;
 		while(a.length||b.length){
@@ -41,7 +41,10 @@
 })(window.external.mxVersion);
 
 // Initiate settings
-(function(){	// Upgrade data
+var ids,map,settings={o:['installFile','compress','firefoxCSS','isApplied']};
+(function(){
+	if(localStorage.getItem('ids')) return;
+	// upgrade data from Stylish 1 irreversibly
 	var k,v=rt.storage.getConfig('data');
 	if(v) try{
 		rt.storage.setConfig('data',null);
@@ -52,10 +55,14 @@
 		setItem('isApplied',v.isApplied);
 	}catch(e){}
 })();
-getItem('installFile',true);
-getItem('isApplied',true);
-var ids=getItem('ids',[]),map={};
-ids.forEach(function(i){map[i]=getItem('us:'+i);});
+function init(){
+	getItem('installFile',true);
+	getItem('isApplied',true);
+	getItem('compress',true);
+	getItem('firefoxCSS',false);
+}
+init();ids=[];map={};
+getItem('ids',[]).forEach(function(i){var o=getItem('us:'+i);if(o) {ids.push(i);map[i]=o;}});
 
 function newStyle(c,save){
 	var r={
@@ -128,7 +135,7 @@ function parseFirefoxCSS(o){
 		r.status=-1;
 		r.message=_('Error parsing CSS code!');
 	}
-	if(o.source) rt.post(o.source,{topic:'ParsedCSS',data:{error:r.status<0,message:r.message}});
+	if(o.source) rt.post(o.source,{topic:'ParsedCSS',data:r});
 	rt.post('UpdateItem',r);
 }
 function fetchURL(url, load){
@@ -177,24 +184,89 @@ function parseCSS(o){
 		c.data=data;c.url=j.url;c.updateUrl=j.updateUrl;
 		saveStyle(c);r.obj=c;
 	}
-	if(o.source) rt.post(o.source,{topic:'ParsedCSS',data:{error:r.status<0,message:r.message}});
+	if(o.source) rt.post(o.source,{topic:'ParsedCSS',data:r});
 	rt.post('UpdateItem',r);
+}
+function parseJSON(o){
+	var r={status:0,message:_('Style updated.')},c;
+	try{
+		o=JSON.parse(o.data);
+		if(!map[o.id]) {
+			r.status=1;
+			r.message=_('Style installed.');
+		}
+		c=newStyle(o);
+		o.data.forEach(function(i){
+			c.data.push({
+				name:i.name||'',
+				domains:i.domains,
+				regexps:i.regexps,
+				urlPrefixes:i.urlPrefixes,
+				urls:i.urls,
+				code:i.code||'',
+			});
+		});
+		saveStyle(c);
+	}catch(e){
+		console.log(e);
+		r.status=-1;
+		r.message=_('Error parsing CSS code!');
+	}
+	if(o.source) rt.post(o.source,{topic:'ParsedCSS',data:r});
+	if(c) {r.item=ids.indexOf(c.id);rt.post('UpdateItem',r);}
+	return r;
+}
+function getFirefoxCSS(c){
+	var d=[];
+	['id','name','url','metaUrl','updateUrl','updated','enabled'].forEach(function(i){
+		if(c[i]!=undefined) d.push('/* @'+i+' '+String(c[i]).replace(/\*/g,'+')+' */');
+	});
+	c.data.forEach(function(i){
+		var p=[];
+		i.domains.forEach(function(j){p.push('domain('+JSON.stringify(j)+')');});
+		i.regexps.forEach(function(j){p.push('regexp('+JSON.stringify(j)+')');});
+		i.urlPrefixes.forEach(function(j){p.push('url-prefix('+JSON.stringify(j)+')');});
+		i.urls.forEach(function(j){p.push('url('+JSON.stringify(j)+')');});
+		d.push('@-moz-document '+p.join(',\n')+'{\n'+i.code+'\n}\n');
+	});
+	return d.join('\n');
 }
 rt.listen('NewStyle',function(o){rt.post('GotStyle',newStyle(null,true));});
 rt.listen('ImportZip',function(b){
 	var z=new JSZip();
 	try{z.load(b,{base64:true});}catch(e){rt.post('ShowMessage',_('Error loading zip file.'));return;}
-	var count=0;
-	z.file(/\.user\.css$/).forEach(function(o){
-		if(o.dir) return;
-		try{
-			var r=parseFirefoxCSS({data:o.asText()});
-			if(!r) count++;
-		}catch(e){console.log('Error importing data: '+o.name+'\n'+e);}
+	var s=z.file('Stylish'),count=0;
+	if(s) try{s=JSON.parse(s.asText());}catch(e){s={};console.log('Error parsing ViolentMonkey configuration.');}
+	[[/\.json$/,parseJSON],[/\.user\.css$/,parseFirefoxCSS]].forEach(function(i){
+		z.file(i[0]).forEach(function(o){
+			if(o.dir) return;
+			try{
+				var r=i[1]({data:o.asText()});
+				if(r.status>=0) count++;
+			}catch(e){console.log('Error importing data: '+o.name+'\n'+e);}
+		});
 	});
-	rt.post('ShowMessage',format(_('$1 item(s) are imported.'),count));
+	if(s.settings) {for(z in s.settings) setItem(z,s.settings[z]);init();}
+	rt.post('Reload',format(_('$1 item(s) are imported.'),count));
+});
+rt.listen('ExportZip',function(o){
+	var z=new JSZip(),n,_n,names={},s={};
+	o.data.forEach(function(c){
+		var j=0;c=map[c];
+		n=_n=c.name||'Noname';
+		while(names[n]) n=_n+'_'+(++j);names[n]=1;
+		if(o.firefoxCSS) z.file(n+'.user.css',getFirefoxCSS(c));
+		else z.file(n+'.json',JSON.stringify(c));
+	});
+	s.settings={};
+	settings.o.forEach(function(i){s.settings[i]=getItem(i);});
+	z.file('Stylish',JSON.stringify(s));
+	s={};if(o.deflate) s.compression='DEFLATE';
+	n=z.generate(s);
+	rt.post('Exported',n);
 });
 rt.listen('ParseCSS',parseCSS);
+rt.listen('ParseJSON',parseJSON);
 rt.listen('ParseFirefoxCSS',parseFirefoxCSS);
 rt.listen('InstallStyle',function(o){
 	if(!o.data) {
@@ -236,8 +308,7 @@ function testURL(url,e){
 rt.listen('LoadStyle',function(o){
 	function load(source,url,id){
 		function getCSS(i){
-			var d=testURL(url,map[i]);
-			if(typeof d=='string') c[i]=d;
+			var d=testURL(url,map[i]);c[i]=d;
 		}
 		var c={};
 		if(id) getCSS(id); else ids.forEach(getCSS);
@@ -250,14 +321,14 @@ rt.listen('LoadStyle',function(o){
 });
 rt.listen('CheckStyle',function(o){rt.post(o.source,{topic:'CheckedStyle',data:map[o.data]});});
 
-rt.listen('GetOptions',function(o){
+rt.listen('GetOptions',function(){
 	var r={ids:ids,map:map};
-	o.forEach(function(i){r[i]=getItem(i);});
+	settings.o.forEach(function(i){r[i]=getItem(i);});
 	rt.post('GotOptions',r);
 });
 rt.listen('SetOption',function(o){
 	if(o.wkey) window[o.wkey]=o.data;
-	(typeof o.data=='string'?setString:setItem)(o.key,o.data);
+	setItem(o.key,o.data);
 });
 
 var optionsURL=new RegExp('^'+(rt.getPrivateUrl()+'options.html').replace(/\./g,'\\.'));

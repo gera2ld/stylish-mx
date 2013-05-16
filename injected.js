@@ -19,15 +19,28 @@ rt.listen(id,function(o){
 		} else unsafeWindow.fireCustomEvent('styleCanBeInstalledChrome');
 	} else if(o.topic=='ConfirmInstall') {
 		if(o.data&&confirm(o.data)) {
-			if(installCallback) installCallback(); else {
-				post('ParseFirefoxCSS',document.body.innerText);
-			}
+			if(installCallback) installCallback();
+			else if(/\.json$/.test(window.location.href)) post('ParseJSON',document.body.innerText);
+			else post('ParseFirefoxCSS',document.body.innerText);
 		}
 	} else if(o.topic=='ParsedCSS') {
-		if(o.data.error) alert(o.data.message);
-		else unsafeWindow.fireCustomEvent('styleInstalled');
+		if(unsafeWindow.fireCustomEvent) {
+			if(o.data.status<0) alert(o.data.message);
+			else unsafeWindow.fireCustomEvent('styleInstalled');
+		} else showMessage(o.data.message);
 	} else if(o.topic=='AlterStyle') alterStyle(o.data);
 });
+function showMessage(data){
+	var d=document.createElement('div');
+	d.setAttribute('style','position:fixed;border-radius:5px;background:orange;padding:20px;z-index:9999;box-shadow:5px 10px 15px rgba(0,0,0,0.4);transition:opacity 1s linear;opacity:0;text-align:left;');
+	document.body.appendChild(d);d.innerHTML=data;
+	d.style.top=(window.innerHeight-d.offsetHeight)/2+'px';
+	d.style.left=(window.innerWidth-d.offsetWidth)/2+'px';
+	function close(){document.body.removeChild(d);delete d;}
+	d.onclick=close;	// close immediately
+	setTimeout(function(){d.style.opacity=1;},1);	// fade in
+	setTimeout(function(){d.style.opacity=0;setTimeout(close,1000);},3000);	// fade out
+}
 function setPopup(){
 	post('SetPopup',{
 		styles:_styles,
@@ -52,9 +65,10 @@ function loadStyle(o){
 	var i,c;
 	if('isApplied' in o) isApplied=o.isApplied;
 	if(o.data) {
-		for(i in o.data)
-			if(typeof o.data[i]=='string') {styles[i]=o.data[i];o.data[i]=1;styleAdd(i);}
-			else {delete styles[i];o.data[i]=-1;styleRemove(i);}
+		for(i in o.data) {
+			if(typeof o.data[i]=='string') {styles[i]=o.data[i];styleAdd(i);}
+			else {delete styles[i];styleRemove(i);}
+		}
 		// TODO: post styles to top
 	}
 	if(isApplied) {
@@ -140,7 +154,7 @@ function fixMaxthon(){
 	unsafeWindow.addCustomEventListener('stylishUpdate',update);
 }
 var installCallback=null,updated=0;
-if(/\.user\.css$/.test(window.location.href)) (function(){
+if(/\.user\.css$|\.json$/.test(window.location.href)) (function(){
 	function install(){
 		if(document&&document.body&&!document.querySelector('title')) post('InstallStyle');
 	}

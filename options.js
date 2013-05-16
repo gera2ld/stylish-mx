@@ -1,5 +1,4 @@
-function $(i){return document.getElementById(i);}
-var N=$('main'),L=$('sList'),O=$('overlay');
+var $=document.getElementById.bind(document),N=$('main'),L=$('sList'),O=$('overlay');
 function getDate(t){var d=new Date();d.setTime(t*1000);return d.toLocaleDateString();}
 function getTime(r){
 	var d=new Date(),z,m=r.updated.match(/(\d+)\/(\d+)\/(\d+)\s+(\d+):(\d+):(\d+)\s+(\+|-)(\d+)/);
@@ -124,7 +123,6 @@ window.addEventListener('DOMContentLoaded',function(){
 var A=$('advanced');
 $('bAdvanced').onclick=function(){showDialog(A);};
 $('cInstall').onchange=function(){rt.post('SetOption',{key:'installFile',data:this.checked});};
-$('cBackup').onchange=function(){rt.post('SetOption',{key:'autoBackup',data:this.checked});};
 $('aExport').onclick=function(){showDialog(X);xLoad();};
 $('aImport').onchange=function(e){
 	var i,f,files=e.target.files;
@@ -135,6 +133,7 @@ $('aImport').onchange=function(e){
 	}
 };
 rt.listen('ShowMessage',function(o){alert(o);});
+rt.listen('Reload',function(o){alert(o);location.reload();});
 A.close=$('aClose').onclick=closeDialog;
 
 // Export
@@ -162,35 +161,14 @@ $('bSelect').onclick=function(){
 	v=i<c.length;
 	for(i=0;i<c.length;i++) if(v) c[i].classList.add('selected'); else c[i].classList.remove('selected');
 };
-function getFirefoxCSS(c){
-	var d=[];
-	['id','name','url','metaUrl','updateUrl','updated','enabled'].forEach(function(i){
-		if(c[i]!=undefined) d.push('/* @'+i+' '+String(c[i]).replace(/\*/g,'+')+' */');
-	});
-	c.data.forEach(function(i){
-		var p=[];
-		i.domains.forEach(function(j){p.push('domain('+JSON.stringify(j)+')');});
-		i.regexps.forEach(function(j){p.push('regexp('+JSON.stringify(j)+')');});
-		i.urlPrefixes.forEach(function(j){p.push('url-prefix('+JSON.stringify(j)+')');});
-		i.urls.forEach(function(j){p.push('url('+JSON.stringify(j)+')');});
-		d.push('@-moz-document '+p.join(',\n')+'{\n'+i.code+'\n}\n');
-	});
-	return d.join('\n');
-}
 xE.onclick=function(){
 	this.disabled=true;this.innerHTML=_('Exporting...');
-	var z=new JSZip(),n,_n,names={},c,i,j;
-	for(i=0;i<ids.length;i++) if(xL.childNodes[i].classList.contains('selected')) {
-		c=map[ids[i]];n=_n=c.name||'Noname';j=0;
-		while(names[n]) n=_n+(++j);names[n]=1;
-		if(xF.checked) z.file(n+'.user.css',getFirefoxCSS(c));
-		else z.file(n+'.json',JSON.stringify(c));
-	}
-	c={};if(xC.checked) c.compression='DEFLATE';
-	n=z.generate(c);
-	window.open('data:application/zip;base64,'+n);
-	X.close();
+	var i,c=[];
+	for(i=0;i<ids.length;i++)
+		if(xL.childNodes[i].classList.contains('selected')) c.push(ids[i]);
+	rt.post('ExportZip',{deflate:xC.checked,firefoxCSS:xF.checked,data:c});
 };
+rt.listen('Exported',function(o){X.close();window.open('data:application/zip;base64,'+o);});
 X.close=$('bClose').onclick=closeDialog;
 
 // Update checker
@@ -365,16 +343,15 @@ function ruleBlur(e){e.target.parentNode.style.width='';}
 [rD,rR,rP,rU].forEach(function(i){i.onfocus=ruleFocus;i.onblur=ruleBlur;});
 
 // Load at last
-var ids,map;L.innerHTML='';
-rt.listen('GotOptions',function(o){
-	ids=o.ids;map=o.map;
+var ids,map;
+function loadOptions(o){
+	ids=o.ids;map=o.map;L.innerHTML='';
 	ids.forEach(function(i){addItem(map[i]);});
 	$('cInstall').checked=o.installFile;
-	$('cBackup').checked=o.autoBackup;
 	xC.checked=o.compress;
 	xF.checked=o.firefoxCSS;
-});
-rt.post('GetOptions',['installFile','compress','firefoxCSS']);
+}
+rt.listen('GotOptions',function(o){loadOptions(o);});	// loadOptions can be rewrited
 rt.listen('UpdateItem',function(r){
 	if(!r.obj||!('item' in r)||r.item<0) return;
 	map[r.obj.id]=r.obj;
@@ -383,3 +360,4 @@ rt.listen('UpdateItem',function(r){
 		default:loadItem(L.childNodes[r.item],r.obj,r);
 	}
 });
+rt.post('GetOptions');
