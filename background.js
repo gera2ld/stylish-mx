@@ -236,7 +236,7 @@ rt.listen('ImportZip',function(b){
 	var z=new JSZip();
 	try{z.load(b,{base64:true});}catch(e){rt.post('ShowMessage',_('Error loading zip file.'));return;}
 	var s=z.file('Stylish'),count=0;
-	if(s) try{s=JSON.parse(s.asText());}catch(e){s={};console.log('Error parsing ViolentMonkey configuration.');}
+	try{s=JSON.parse(s.asText());}catch(e){s={};console.log('Error parsing ViolentMonkey configuration.');}
 	[[/\.json$/,parseJSON],[/\.user\.css$/,parseFirefoxCSS]].forEach(function(i){
 		z.file(i[0]).forEach(function(o){
 			if(o.dir) return;
