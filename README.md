@@ -7,4 +7,4 @@ Stylish for Opera
 * [Multilingual](http://github.com/gera2ld/Stylish-for-Opera/wiki/i18n): If you'd like to help with a new translation, please visit this page.
 
 中文用户[点此](http://lonelyatom.diandian.com/addons/maxthon/stylish-zh)。
-Author: Gerald \<<gera2ld@163.com>\>
+Author: Gerald \<gera2ld@163.com\>
