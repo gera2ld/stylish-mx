@@ -112,12 +112,7 @@ O.onclick=function(){
 function confirmCancel(dirty){
 	return !dirty||confirm(_('Modifications are not saved!'));
 }
-initFont();
-window.addEventListener('DOMContentLoaded',function(){
-	var nodes=document.querySelectorAll('.i18n'),c,s,i,j;
-	for(i=0;i<nodes.length;i++)
-		nodes[i].innerHTML=_(nodes[i].innerHTML);
-},true);
+initFont();initI18n();
 
 // Advanced
 var A=$('advanced');
