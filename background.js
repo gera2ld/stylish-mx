@@ -41,7 +41,7 @@
 })(window.external.mxVersion);
 
 // Initiate settings
-var ids,map,settings={o:['installFile','compress','firefoxCSS','isApplied']};
+var ids,map,settings={o:['installFile','firefoxCSS','isApplied'],s:[]};
 (function(){
 	if(localStorage.getItem('ids')) return;
 	// upgrade data from Stylish 1 irreversibly
@@ -58,7 +58,6 @@ var ids,map,settings={o:['installFile','compress','firefoxCSS','isApplied']};
 function init(){
 	getItem('installFile',true);
 	getItem('isApplied',true);
-	getItem('compress',true);
 	getItem('firefoxCSS',false);
 }
 init();ids=[];map={};
@@ -216,54 +215,12 @@ function parseJSON(o){
 	if(c) {r.item=ids.indexOf(c.id);rt.post('UpdateItem',r);}
 	return r;
 }
-function getFirefoxCSS(c){
-	var d=[];
-	['id','name','url','metaUrl','updateUrl','updated','enabled'].forEach(function(i){
-		if(c[i]!=undefined) d.push('/* @'+i+' '+String(c[i]).replace(/\*/g,'+')+' */');
-	});
-	c.data.forEach(function(i){
-		var p=[];
-		i.domains.forEach(function(j){p.push('domain('+JSON.stringify(j)+')');});
-		i.regexps.forEach(function(j){p.push('regexp('+JSON.stringify(j)+')');});
-		i.urlPrefixes.forEach(function(j){p.push('url-prefix('+JSON.stringify(j)+')');});
-		i.urls.forEach(function(j){p.push('url('+JSON.stringify(j)+')');});
-		d.push('@-moz-document '+p.join(',\n')+'{\n'+i.code+'\n}\n');
-	});
-	return d.join('\n');
-}
 rt.listen('NewStyle',function(o){rt.post('GotStyle',newStyle(null,true));});
-rt.listen('ImportZip',function(b){
-	var z=new JSZip();
-	try{z.load(b,{base64:true});}catch(e){rt.post('ShowMessage',_('Error loading zip file.'));return;}
-	var s=z.file('Stylish'),count=0;
-	try{s=JSON.parse(s.asText());}catch(e){s={};console.log('Error parsing ViolentMonkey configuration.');}
-	[[/\.json$/,parseJSON],[/\.user\.css$/,parseFirefoxCSS]].forEach(function(i){
-		z.file(i[0]).forEach(function(o){
-			if(o.dir) return;
-			try{
-				var r=i[1]({data:o.asText()});
-				if(r.status>=0) count++;
-			}catch(e){console.log('Error importing data: '+o.name+'\n'+e);}
-		});
-	});
-	if(s.settings) {for(z in s.settings) setItem(z,s.settings[z]);init();}
-	rt.post('Reload',format(_('$1 item(s) are imported.'),count));
-});
 rt.listen('ExportZip',function(o){
-	var z=new JSZip(),n,_n,names={},s={};
-	o.data.forEach(function(c){
-		var j=0;c=map[c];
-		n=_n=c.name||'Noname';
-		while(names[n]) n=_n+'_'+(++j);names[n]=1;
-		if(o.firefoxCSS) z.file(n+'.user.css',getFirefoxCSS(c));
-		else z.file(n+'.json',JSON.stringify(c));
-	});
-	s.settings={};
-	settings.o.forEach(function(i){s.settings[i]=getItem(i);});
-	z.file('Stylish',JSON.stringify(s));
-	s={};if(o.deflate) s.compression='DEFLATE';
-	n=z.generate(s);
-	rt.post('Exported',n);
+	var r={data:[],settings:{}};
+	o.data.forEach(function(c){var o=map[c];if(o) r.data.push(o);});
+	settings.o.concat(settings.s).forEach(function(i){r.settings[i]=getItem(i);});
+	rt.post('ExportStart',r);
 });
 rt.listen('ParseCSS',parseCSS);
 rt.listen('ParseJSON',parseJSON);

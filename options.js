@@ -1,4 +1,6 @@
-var $=document.getElementById.bind(document),N=$('main'),L=$('sList'),O=$('overlay');
+var $=document.getElementById.bind(document),
+		N=$('main'),L=$('sList'),O=$('overlay');
+zip.workerScriptsPath='lib/zip.js/';
 function getDate(t){var d=new Date();d.setTime(t*1000);return d.toLocaleDateString();}
 function getTime(r){
 	var d=new Date(),z,m=r.updated.match(/(\d+)\/(\d+)\/(\d+)\s+(\d+):(\d+):(\d+)\s+(\+|-)(\d+)/);
@@ -120,19 +122,39 @@ $('bAdvanced').onclick=function(){showDialog(A);};
 $('cInstall').onchange=function(){rt.post('SetOption',{key:'installFile',data:this.checked});};
 $('aExport').onclick=function(){showDialog(X);xLoad();};
 $('aImport').onchange=function(e){
-	var i,f,files=e.target.files;
-	for(i=0;f=files[i];i++) {
-		var r=new FileReader();
-		r.onload=function(e){rt.post('ImportZip',btoa(e.target.result));};
-		r.readAsBinaryString(f);
-	}
+	zip.createReader(new zip.BlobReader(e.target.files[0]),function(r){
+		r.getEntries(function(e){
+			function getFiles(){
+				var i=e.shift();
+				if(i) i.getData(writer,function(t){
+					rt.post(/\.json$/.test(i.filename)?'ParseJSON':'ParseFirefoxCSS',
+						{data:t});
+					count++;
+					getFiles();
+				}); else {
+					alert(format(_('$1 item(s) are imported.'),count));
+					location.reload();
+				}
+			}
+			var i,s={},writer=new zip.TextWriter(),count=0;
+			for(i=0;i<e.length;i++) if(e[i].filename=='Stylish') break;
+			if(i<e.length) e.splice(i,1)[0].getData(writer,function(t){
+				try{
+					s=JSON.parse(t);
+				}catch(e){
+					s={};
+					console.log('Error parsing Stylish configuration.');
+				}
+				getFiles();
+			}); else getFiles();
+		});
+	});
 };
 rt.listen('ShowMessage',function(o){alert(o);});
-rt.listen('Reload',function(o){alert(o);location.reload();});
 A.close=$('aClose').onclick=closeDialog;
 
 // Export
-var X=$('export'),xL=$('xList'),xE=$('bExport'),xC=$('cCompress'),xF=$('cFirefox');
+var X=$('export'),xL=$('xList'),xE=$('bExport'),xF=$('cFirefox');
 function xLoad() {
 	xL.innerHTML='';xE.disabled=false;xE.innerHTML=_('Export');
 	ids.forEach(function(i){
@@ -143,7 +165,6 @@ function xLoad() {
 		xL.appendChild(d);
 	});
 }
-xC.onchange=function(){rt.post('SetOption',{key:'compress',data:this.checked});};
 xF.onchange=function(){rt.post('SetOption',{key:'firefoxCSS',data:this.checked});};
 xL.onclick=function(e){
 	var t=e.target;
@@ -156,15 +177,77 @@ $('bSelect').onclick=function(){
 	v=i<c.length;
 	for(i=0;i<c.length;i++) if(v) c[i].classList.add('selected'); else c[i].classList.remove('selected');
 };
-xE.onclick=function(){
+X.close=$('bClose').onclick=closeDialog;
+xE.onclick=function(e){
+	e.preventDefault();
 	this.disabled=true;this.innerHTML=_('Exporting...');
 	var i,c=[];
 	for(i=0;i<ids.length;i++)
 		if(xL.childNodes[i].classList.contains('selected')) c.push(ids[i]);
-	rt.post('ExportZip',{deflate:xC.checked,firefoxCSS:xF.checked,data:c});
+	rt.post('ExportZip',{data:c});
 };
-rt.listen('Exported',function(o){X.close();window.open('data:application/zip;base64,'+o);});
-X.close=$('bClose').onclick=closeDialog;
+function getFirefoxCSS(c){
+	var d=[];
+	['id','name','url','metaUrl','updateUrl','updated','enabled'].forEach(function(i){
+		if(c[i]!=undefined) d.push('/* @'+i+' '+String(c[i]).replace(/\*/g,'+')+' */');
+	});
+	c.data.forEach(function(i){
+		var p=[];
+		i.domains.forEach(function(j){p.push('domain('+JSON.stringify(j)+')');});
+		i.regexps.forEach(function(j){p.push('regexp('+JSON.stringify(j)+')');});
+		i.urlPrefixes.forEach(function(j){p.push('url-prefix('+JSON.stringify(j)+')');});
+		i.urls.forEach(function(j){p.push('url('+JSON.stringify(j)+')');});
+		d.push('@-moz-document '+p.join(',\n')+'{\n'+i.code+'\n}\n');
+	});
+	return d.join('\n');
+}
+function exportStart(o){
+	function addFiles(){
+		if(!writer) {	// create writer
+			zip.createWriter(new zip.BlobWriter(),function(w){writer=w;addFiles();});
+			return;
+		}
+		adding=true;
+		var i=files.shift();
+		if(i) {
+			if(i.name) {	// add file
+				writer.add(i.name,new zip.TextReader(i.content),addFiles);
+				return;
+			} else {	// finished
+				writer.close(function(b){
+					xE.innerHTML='导出完成';
+					var u=URL.createObjectURL(b),e=document.createEvent('MouseEvent');
+					e.initMouseEvent('click',true,true,window,0,0,0,0,0,false,false,false,false,0,null);
+					xH.href=u;
+					xH.download='styles.zip';
+					xH.dispatchEvent(e);
+					writer=null;
+					X.close();
+					URL.revokeObjectURL(u);
+					xH.removeAttribute('href');
+					xH.removeAttribute('download');
+				});
+			}
+		}
+		adding=false;
+	}
+	function addFile(o){
+		files.push(o);
+		if(!adding) addFiles();
+	}
+	var writer=null,files=[],adding=false,xH=$('xHelper'),
+			n,_n,names={},s={settings:o.settings};
+	o.data.forEach(function(c){
+		var j=0;
+		n=_n=c.name||'Noname';
+		while(names[n]) n=_n+'_'+(++j);names[n]=1;
+		if(xF.checked) addFile({name:n+'.user.css',content:getFirefoxCSS(c)});
+		else addFile({name:n+'.json',content:JSON.stringify(c)});
+	});
+	addFile({name:'Stylish',content:JSON.stringify(s)});
+	addFile({});	// finish adding files
+}
+rt.listen('ExportStart',exportStart);
 
 // Update checker
 function check(i){
@@ -343,7 +426,6 @@ function loadOptions(o){
 	ids=o.ids;map=o.map;L.innerHTML='';
 	ids.forEach(function(i){addItem(map[i]);});
 	$('cInstall').checked=o.installFile;
-	xC.checked=o.compress;
 	xF.checked=o.firefoxCSS;
 }
 rt.listen('GotOptions',function(o){loadOptions(o);});	// loadOptions can be rewrited
