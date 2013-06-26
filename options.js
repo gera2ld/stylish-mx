@@ -150,7 +150,6 @@ $('aImport').onchange=function(e){
 		});
 	});
 };
-rt.listen('ShowMessage',function(o){alert(o);});
 A.close=$('aClose').onclick=closeDialog;
 
 // Export

@@ -23,12 +23,21 @@ function broadcast(s){
 	var j,t;for(j=0;t=br.tabs.getTab(j);j++) br.executeScript(s,t.id);
 }
 
+function getString(key,def){
+	var v=localStorage.getItem(key);
+	if(v==null) (v=def)&&localStorage.setItem(key,v);
+	return v;
+}
+function setString(key,val){
+	localStorage.setItem(key,val=val||'');
+	return val;
+}
 function getItem(key,def){
 	var v=localStorage.getItem(key);
 	if(!v&&def!=undefined) return setItem(key,def);
 	try{return JSON.parse(v);}catch(e){return def;}
 }
 function setItem(key,val){
-	localStorage.setItem(key,JSON.stringify(val));
+	setString(key,JSON.stringify(val));
 	return val;
 }
