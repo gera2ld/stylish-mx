@@ -315,14 +315,14 @@ function edit(i){
 	S.innerHTML='';S.cur=0;S.dirty=false;
 	eS.disabled=eSC.disabled=true;
 	I.value=M.css.name;
-	if(M.data.length) for(var i=0;i<M.data.length;i++) mAddItem(M.data[i].name||i+1);
+	if(M.data.length) for(var i=0;i<M.data.length;i++) mAddItem(M.data[i].name);
 	else addSection();
 	mShow();
 }
 function mAddItem(n){
 	var d=document.createElement('div');
-	d.innerText=n;
 	S.appendChild(d);
+	d.innerText=n||S.childNodes.length;
 	return d;
 }
 function split(t){return t.replace(/^\s+|\s+$/g,'').split(/\s*\n\s*/).filter(function(e){return e;});}
@@ -330,7 +330,6 @@ function mSection(r){
 	if(M.data[S.cur]){
 		if(S.dirty){
 			S.dirty=false;
-			M.data[S.cur].name=S.childNodes[S.cur].innerText;
 			M.data[S.cur].domains=split(rD.value);
 			M.data[S.cur].regexps=split(rR.value);
 			M.data[S.cur].urlPrefixes=split(rP.value);
@@ -351,9 +350,7 @@ function mSave(){
 	} else return false;
 }
 function mShow(){
-	var c=S.childNodes[S.cur];
-	rD.disabled=rR.disabled=rP.disabled=rU.disabled=!c;
-	T.setOption('readOnly',!c&&'nocursor');S.dirty=true;
+	var c=S.childNodes[S.cur];S.dirty=true;
 	if(c) {
 		S.childNodes[S.cur].classList.add('selected');
 		rD.value=M.data[S.cur].domains.join('\n');
@@ -388,24 +385,32 @@ function addSection(){
 	mSection(1);
 	S.cur=M.data.length;
 	M.data.push(d);
-	mAddItem(M.data.length);
+	mAddItem();
 	mShow();
 }
 function renameSection(t){
 	if(!t) return;
 	var o=prompt(format(_('Rename Section "$1" to:'),t.innerText));
-	if(o!=null) {t.innerText=o||S.cur+1;S.markDirty();}
+	if(o!=null) {
+		M.data[S.cur].name=o;
+		t.innerText=o||S.cur+1;
+		M.markDirty();
+	}
 }
 $('mNew').onclick=addSection;
 $('mDel').onclick=function(){
-	if(S.cur) {
+	if(M.data.length>1) {
 		M.data.splice(S.cur,1);
 		S.removeChild(S.lastChild);
 		for(var i=S.cur;i<M.data.length;i++) {
 			S.childNodes[i].innerText=M.data[i].name||i+1;
 		}
+		if(S.cur==M.data.length) S.cur--;
 		M.markDirty();mShow();
 	}
+};
+$('mRen').onclick=function(){
+	renameSection(S.childNodes[S.cur]);
 };
 eS.onclick=function(){
 	if(mSave()) {M.css.data=cloneData(M.data);rt.post('SaveStyle',M.css);}
