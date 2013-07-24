@@ -21,9 +21,7 @@
  */
 
 // Check Maxthon version
-(function(v){
-	if(getItem('warnObsolete',0)) return;
-	setItem('warnObsolete',1);
+(function(l,v){
 	function older(a,b,c,d){
 		a=a.split('.');b=b.split('.');c=d=0;
 		while(a.length||b.length){
@@ -33,12 +31,20 @@
 		}
 		return c<d;
 	}
-	if(older(v,'4.0.3.5000')) {
+	function showHTML(locales,name) {
 		mx.locale();
-		var v=mx.getSystemLocale(),o=['en','zh-cn'],i=o.indexOf(v);if(i<0) v=o[0];
-		br.tabs.newTab({url:rt.getPrivateUrl()+'oldversion/'+v+'.html',activate:true});
+		var lc=mx.getSystemLocale(),i=locales.indexOf(lc);
+		if(i<0) lc=locales[0]||'en';
+		br.tabs.newTab({url:rt.getPrivateUrl()+'locale_html/'+name+'_'+lc+'.html',activate:true});
 	}
-})(window.external.mxVersion);
+	if(older(l,v)) {	// first use or new update
+		setString('lastVersion',v);
+		if(older(v,'4.1.1.1600'))	// early versions may have bugs
+			showHTML(['en','zh-cn'],'oldversion');
+		else if(l&&older(l,'4.1.1.1600'))	// update caused data loss
+			showHTML(['en','zh-cn'],'dataloss');
+	}
+})(getString('lastVersion',''),window.external.mxVersion);
 
 // Initiate settings
 var ids,map,settings={o:['installFile','firefoxCSS','isApplied'],s:[]};
