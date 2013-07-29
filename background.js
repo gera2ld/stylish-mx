@@ -47,7 +47,7 @@
 })(getString('lastVersion',''),window.external.mxVersion);
 
 // Initiate settings
-var ids,map,settings={o:['installFile','firefoxCSS','isApplied'],s:[]};
+var ids,map,settings={o:['installFile','firefoxCSS','isApplied'],s:['theme']};
 (function(){
 	if(localStorage.getItem('ids')) return;
 	// upgrade data from Stylish 1 irreversibly
@@ -286,12 +286,13 @@ rt.listen('CheckStyle',function(o){rt.post(o.source,{topic:'CheckedStyle',data:m
 
 rt.listen('GetOptions',function(){
 	var r={ids:ids,map:map};
-	settings.o.forEach(function(i){r[i]=getItem(i);});
+	function get(l,f){l.forEach(function(i){r[i]=f(i);});}
+	get(settings.o,getItem);get(settings.s,getString);
 	rt.post('GotOptions',r);
 });
 rt.listen('SetOption',function(o){
 	if(o.wkey) window[o.wkey]=o.data;
-	setItem(o.key,o.data);
+	(typeof o.data=='string'?setString:setItem)(o.key,o.data);
 });
 
 var optionsURL=new RegExp('^'+(rt.getPrivateUrl()+'options.html').replace(/\./g,'\\.'));

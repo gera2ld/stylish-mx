@@ -423,6 +423,22 @@ function ruleFocus(e){e.target.parentNode.style.width='50%';}
 function ruleBlur(e){e.target.parentNode.style.width='';}
 [rD,rR,rP,rU].forEach(function(i){i.onfocus=ruleFocus;i.onblur=ruleBlur;});
 
+// Theme
+var themes={
+	"default":['default.css','default'],
+	dark:['dark.css','tomorrow-night-eighties'],
+},th=$('sTheme');
+function loadTheme(o){
+	o=themes[o]||themes['default'];
+	$('theme').href='themes/'+o[0];
+	T.setOption('theme',o[1]);
+}
+th.onchange=function(e){
+	var v=e.target.value;
+	loadTheme(v);
+	rt.post('SetOption',{key:'theme',data:v});
+};
+
 // Load at last
 var ids,map;
 function loadOptions(o){
@@ -430,6 +446,7 @@ function loadOptions(o){
 	ids.forEach(function(i){addItem(map[i]);});
 	$('cInstall').checked=o.installFile;
 	xF.checked=o.firefoxCSS;
+	loadTheme(th.value=o.theme);
 }
 rt.listen('GotOptions',function(o){loadOptions(o);});	// loadOptions can be rewrited
 rt.listen('UpdateItem',function(r){
