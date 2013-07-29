@@ -73,7 +73,7 @@ button:disabled{background:gray;color:silver;}
 #sList .disabled{color:#ccc;background:#222;}
 #sList .disabled a{color:gray;}
 #sList .name{font-weight:bold;line-height:150%;}
-#editor .CodeMirror,.list,textarea,input[type=text]{background:#555;color:#ddd;}
+.list,textarea,input[type=text]{background:black;color:#ddd;}
 .list>div{border-bottom:1px dashed #555;}
 .list .selected{background:silver;color:#333;}
 #xOptions>div{background:#333;box-shadow:5px 10px 15px rgba(0,0,0,0.4);border:1px solid #555;}

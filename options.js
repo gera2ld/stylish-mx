@@ -446,7 +446,7 @@ function loadOptions(o){
 	ids.forEach(function(i){addItem(map[i]);});
 	$('cInstall').checked=o.installFile;
 	xF.checked=o.firefoxCSS;
-	loadTheme(th.value=o.theme);
+	loadTheme(th.value=o.theme||'default');
 }
 rt.listen('GotOptions',function(o){loadOptions(o);});	// loadOptions can be rewrited
 rt.listen('UpdateItem',function(r){
