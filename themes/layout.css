@@ -30,8 +30,7 @@ fieldset{border-radius:5px;}
 #sList .name{display:inline-block;max-width:400px;}
 #sList .panel{position:absolute;bottom:10px;right:10px;}
 #sList .panel>button{width:80px;}
-#overlay{background:#000;position:fixed;top:0;bottom:0;left:0;right:0;-webkit-transition:all .5s linear;opacity:0;}
-#overlay.overlay{opacity:0.6;}
+#overlay{position:fixed;top:0;bottom:0;left:0;right:0;-webkit-transition:all .5s linear;opacity:0;}
 #editor table{border-spacing:10px;}
 .rules{width:100%;}
 .rules textarea{height:100px;}
