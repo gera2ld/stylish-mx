@@ -121,7 +121,7 @@ var A=$('advanced');
 $('bAdvanced').onclick=function(){showDialog(A);};
 $('cInstall').onchange=function(){rt.post('SetOption',{key:'installFile',data:this.checked});};
 $('aExport').onclick=function(){showDialog(X);xLoad();};
-$('aImport').onchange=function(e){
+function importFile(e){
 	zip.createReader(new zip.BlobReader(e.target.files[0]),function(r){
 		r.getEntries(function(e){
 			function getFiles(){
@@ -149,6 +149,12 @@ $('aImport').onchange=function(e){
 			}); else getFiles();
 		});
 	});
+}
+$('aImport').onclick=function(){
+	var e=document.createEvent('MouseEvent'),iH=document.createElement('input');
+	iH.setAttribute('type','file');iH.onchange=importFile;
+	e.initMouseEvent('click',true,true,window,0,0,0,0,0,false,false,false,false,0,null);
+	iH.dispatchEvent(e);
 };
 A.close=$('aClose').onclick=closeDialog;
 
