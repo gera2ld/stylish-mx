@@ -40,9 +40,9 @@
 	if(older(l,v)) {	// first use or new update
 		setString('lastVersion',v);
 		if(older(v,'4.1.1.1600'))	// early versions may have bugs
-			showHTML(['en','zh-cn'],'oldversion');
+			br.tabs.newTab({url:'https://github.com/gera2ld/Stylish-for-Maxthon/wiki/ObsoleteMaxthon',activate:true});
 		else if(l&&older(l,'4.1.1.1600'))	// update caused data loss
-			showHTML(['en','zh-cn'],'dataloss');
+			br.tabs.newTab({url:'https://github.com/gera2ld/Stylish-for-Maxthon/wiki/DataLoss',activate:true});
 	}
 })(getString('lastVersion',''),window.external.mxVersion);
 
