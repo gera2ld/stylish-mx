@@ -1,8 +1,3 @@
-var p=document.createElement('p');
-p.setAttribute('onclick','return window;');
-var unsafeWindow=p.onclick();
-delete p;
-
 // Message
 var rt=window.external.mxGetRuntime(),
 		id=Date.now()+Math.random().toString().substr(1),
@@ -10,13 +5,18 @@ var rt=window.external.mxGetRuntime(),
 function post(topic,data,o){
 	rt.post(topic,{source:o&&o.id||id,origin:o&&o.origin||window.location.href,data:data});
 }
+function fireEvent(t){
+	var e=document.createEvent('Events');
+	e.initEvent(t,false,false,document.defaultView,null);
+	document.dispatchEvent(e);
+}
 rt.listen(id,function(o){
 	if(o.topic=='LoadedStyle') loadStyle(o.data);
 	else if(o.topic=='CheckedStyle') {
 		if(o.data){
-			if(!o.data.updated||o.data.updated<updated) unsafeWindow.fireCustomEvent('styleCanBeUpdated');
-			else unsafeWindow.fireCustomEvent('styleAlreadyInstalledChrome');
-		} else unsafeWindow.fireCustomEvent('styleCanBeInstalledChrome');
+			if(!o.data.updated||o.data.updated<data.updated) fireEvent('styleCanBeUpdated');
+			else fireEvent('styleAlreadyInstalledChrome');
+		} else fireEvent('styleCanBeInstalledChrome');
 	} else if(o.topic=='ConfirmInstall') {
 		if(o.data&&confirm(o.data)) {
 			if(installCallback) installCallback();
@@ -24,9 +24,9 @@ rt.listen(id,function(o){
 			else post('ParseFirefoxCSS',document.body.innerText);
 		}
 	} else if(o.topic=='ParsedCSS') {
-		if(unsafeWindow.fireCustomEvent) {
+		if(location.host=='userstyles.org') {
 			if(o.data.status<0) alert(o.data.message);
-			else unsafeWindow.fireCustomEvent('styleInstalled');
+			else fireEvent('styleInstalled');
 		} else showMessage(o.data.message);
 	} else if(o.topic=='AlterStyle') alterStyle(o.data);
 });
@@ -69,7 +69,6 @@ function loadStyle(o){
 			if(typeof o.data[i]=='string') {styles[i]=o.data[i];styleAdd(i);}
 			else {delete styles[i];styleRemove(i);}
 		}
-		// TODO: post styles to top
 	}
 	if(isApplied) {
 		if(!style) {
@@ -105,6 +104,7 @@ window.addEventListener('DOMContentLoaded',function(){
 },false);
 
 // Stylish fix
+var data=null,ping=null;
 function getTime(r){
 	var d=new Date(),z,m=r.updated.match(/(\d+)\/(\d+)\/(\d+)\s+(\d+):(\d+):(\d+)\s+(\+|-)(\d+)/);
 	d.setUTCFullYear(parseInt(m[1],10));
@@ -120,40 +120,39 @@ function getTime(r){
 	return d;
 }
 function fixMaxthon(){
-	if(!unsafeWindow.addCustomEventListener) return;
-	window.removeEventListener('DOMNodeInserted',fixMaxthon,false);
 	function getData(k){
 		var s=document.querySelector('link[rel='+k+']');
 		if(s) return s.getAttribute('href');
 	}
-	var id=getData('stylish-id-url'),metaUrl=id+'.json';
-	var req = new window.XMLHttpRequest();
+	var url=getData('stylish-id-url'),metaUrl=url+'.json',req=new window.XMLHttpRequest();
 	req.open('GET',metaUrl,true);
 	req.onloadend=function(){
-		if(this.status==200) try{updated=getTime(JSON.parse(req.responseText));} catch(e) {}
-		post('CheckStyle',id);
+		if(this.status==200) try{
+			data.updated=getTime(JSON.parse(req.responseText));
+		} catch(e) {}
+		post('CheckStyle',url);
 	};
 	req.send();
 
-	installCallback=function(){
-		post('InstallStyle',{
-			id:id,
-			metaUrl:metaUrl,
-			updated:updated,
-			url:getData('stylish-code-chrome'),
-		});
-		if(installCallback.ping){
+	data={
+		id:url,
+		metaUrl:metaUrl,
+	};
+	function update(){
+		data.url=getData('stylish-code-chrome');
+		post('InstallStyle',data);
+	}
+	function install(){
+		ping=function(){
 			var req=new window.XMLHttpRequest();
 			req.open('GET', getData('stylish-install-ping-url-chrome'), true);
 			req.send();
-		}
-	};
-	function install(e){installCallback.ping=true;post('InstallStyle');}
-	function update(e){installCallback.ping=false;unsafeWindow.stylishInstallChrome(e);}
-	unsafeWindow.addCustomEventListener('stylishInstallChrome',install);
-	unsafeWindow.addCustomEventListener('stylishUpdate',update);
+		};
+		update();
+	}
+	document.addEventListener('stylishInstallChrome',install,false);
+	document.addEventListener('stylishUpdateChrome',update,false);
 }
-var installCallback=null,updated=0;
 if(/\.user\.css$|\.json$/.test(window.location.href)) (function(){
 	function install(){
 		if(document&&document.body&&!document.querySelector('title')) post('InstallStyle');
@@ -161,4 +160,4 @@ if(/\.user\.css$|\.json$/.test(window.location.href)) (function(){
 	if(document.readyState!='complete') window.addEventListener('load',install,false);
 	else install();
 })(); else if(/^http:\/\/userstyles\.org\/styles\//.test(window.location.href))
-	window.addEventListener('DOMNodeInserted',fixMaxthon,false);
+	window.addEventListener('DOMContentLoaded',fixMaxthon,false);
