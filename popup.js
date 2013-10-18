@@ -44,7 +44,7 @@ var isApplied=getItem('isApplied');
 function getPopup(){
 	getPopup.flag++;	// avoid frequent asking for popup menu
 	setTimeout(function(){
-		if(!--getPopup.flag) br.executeScript('setPopup();');
+		if(!--getPopup.flag) br.executeScript('try{setPopup();}catch(e){}');
 	},200);
 }
 getPopup.flag=0;

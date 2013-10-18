@@ -1,3 +1,4 @@
+(function(){
 // Message
 var rt=window.external.mxGetRuntime(),
 		id=Date.now()+Math.random().toString().substr(1),
@@ -19,7 +20,7 @@ rt.listen(id,function(o){
 		} else fireEvent('styleCanBeInstalledChrome');
 	} else if(o.topic=='ConfirmInstall') {
 		if(o.data&&confirm(o.data)) {
-			if(installCallback) installCallback();
+			if(callback) callback();
 			else if(/\.json$/.test(window.location.href)) post('ParseJSON',document.body.innerText);
 			else post('ParseFirefoxCSS',document.body.innerText);
 		}
@@ -41,17 +42,17 @@ function showMessage(data){
 	setTimeout(function(){d.style.opacity=1;},1);	// fade in
 	setTimeout(function(){d.style.opacity=0;setTimeout(close,1000);},3000);	// fade out
 }
-function setPopup(){
+function updateStyle(i){
+	var o={frames:frames};if(i) o.id=i;
+	post('LoadStyle',o);
+}
+window.setPopup=function(){
 	post('SetPopup',{
 		styles:_styles,
 		astyles:Object.getOwnPropertyNames(astyles),
 		cstyle:cur
 	});
 };
-function updateStyle(i){
-	var o={frames:frames};if(i) o.id=i;
-	post('LoadStyle',o);
-}
 
 // CSS applying
 var isApplied=true,style=null,styles={},_styles=[],fstyles={};
@@ -104,7 +105,7 @@ window.addEventListener('DOMContentLoaded',function(){
 },false);
 
 // Stylish fix
-var data=null,ping=null;
+var data=null,ping=null,callback=null;
 function getTime(r){
 	var d=new Date(),z,m=r.updated.match(/(\d+)\/(\d+)\/(\d+)\s+(\d+):(\d+):(\d+)\s+(\+|-)(\d+)/);
 	d.setUTCFullYear(parseInt(m[1],10));
@@ -140,7 +141,8 @@ function fixMaxthon(){
 	};
 	function update(){
 		data.url=getData('stylish-code-chrome');
-		post('InstallStyle',data);
+		callback=function(){post('InstallStyle',data);callback=null;};
+		post('InstallStyle');
 	}
 	function install(){
 		ping=function(){
@@ -161,3 +163,4 @@ if(/\.user\.css$|\.json$/.test(window.location.href)) (function(){
 	else install();
 })(); else if(/^http:\/\/userstyles\.org\/styles\//.test(window.location.href))
 	window.addEventListener('DOMContentLoaded',fixMaxthon,false);
+})();
