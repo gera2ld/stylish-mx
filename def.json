@@ -19,7 +19,7 @@
 		},
 		"config":"options.html",
 		"service":{
-			"main":"index.html",
+			"main":"background.html",
 			"debug":false
 		},
 		"actions": [

@@ -42,10 +42,10 @@ function showMessage(data){
 	setTimeout(function(){d.style.opacity=1;},1);	// fade in
 	setTimeout(function(){d.style.opacity=0;setTimeout(close,1000);},3000);	// fade out
 }
-function updateStyle(i){
+window.updateStyle=function(i){
 	var o={frames:frames};if(i) o.id=i;
 	post('LoadStyle',o);
-}
+};
 window.setPopup=function(){
 	post('SetPopup',{
 		styles:_styles,
