@@ -69,7 +69,7 @@ function init(){
 init();ids=[];map={};
 getItem('ids',[]).forEach(function(i){var o=getItem('us:'+i);if(o) {ids.push(i);map[i]=o;}});
 
-function newStyle(c,save){
+function newStyle(c){
 	var r={
 		name:c?c.name:_('New Style'),
 		url:c&&c.url,
@@ -80,7 +80,6 @@ function newStyle(c,save){
 		data:[]
 	};
 	if(!r.id) r.id=Date.now()+Math.random().toString().substr(1);
-	if(save) saveStyle(r);
 	return r;
 }
 function saveStyle(o){
@@ -221,7 +220,7 @@ function parseJSON(o){
 	if(c) {r.item=ids.indexOf(c.id);rt.post('UpdateItem',r);}
 	return r;
 }
-rt.listen('NewStyle',function(o){rt.post('GotStyle',newStyle(null,true));});
+rt.listen('NewStyle',function(o){saveStyle(o=newStyle());rt.post('GotStyle',o);});
 rt.listen('ExportZip',function(o){
 	var r={data:[],settings:{}};
 	o.data.forEach(function(c){var o=map[c];if(o) r.data.push(o);});

@@ -289,16 +289,7 @@ function check(i){
 // Style Editor
 var M=$('editor'),S=$('mSection'),I=$('mName'),
     rD=$('mDomain'),rR=$('mRegexp'),rP=$('mUrlPrefix'),rU=$('mUrl'),
-    eS=$('mSave'),eSC=$('mSaveClose');
-var T=CodeMirror.fromTextArea($('mCode'),{
-	lineNumbers:true,
-	matchBrackets:true,
-	mode:'text/css',
-	lineWrapping:true,
-	indentUnit:4,
-	indentWithTabs:true,
-	extraKeys:{"Enter":"newlineAndIndentContinueComment"}
-});
+    eS=$('mSave'),eSC=$('mSaveClose'),T;
 function cloneData(d){
 	var c=[];
 	d.forEach(function(i){
@@ -339,20 +330,17 @@ function mSection(r){
 			M.data[S.cur].regexps=split(rR.value);
 			M.data[S.cur].urlPrefixes=split(rP.value);
 			M.data[S.cur].urls=split(rU.value);
-		}
-		if(!T.isClean()) {
-			M.data[S.cur].code=T.getValue();T.markClean();
+			M.data[S.cur].code=T.getValue();T.clearHistory();
 		}
 		if(r) S.childNodes[S.cur].classList.remove('selected');
 	}
 }
-function mSave(){
-	if(!eS.disabled){
-		M.css.name=I.value;
-		mSection();
-		eS.disabled=eSC.disabled=true;
-		return true;
-	} else return false;
+function mSave(e){
+	M.css.name=I.value;
+	mSection();
+	eS.disabled=eSC.disabled=true;
+	M.css.data=e?cloneData(M.data):M.data;
+	rt.post('SaveStyle',M.css);
 }
 function mShow(){
 	var c=S.childNodes[S.cur];S.dirty=true;
@@ -362,9 +350,9 @@ function mShow(){
 		rR.value=M.data[S.cur].regexps.join('\n');
 		rP.value=M.data[S.cur].urlPrefixes.join('\n');
 		rU.value=M.data[S.cur].urls.join('\n');
-		T.setValue(M.data[S.cur].code);
-	} else T.setValue(rD.value=rR.value=rP.value=rU.value='');
-	T.markClean();T.getDoc().clearHistory();S.dirty=false;
+		T.setValueAndFocus(M.data[S.cur].code);
+	} else T.setValueAndFocus(rD.value=rR.value=rP.value=rU.value='');
+	T.clearHistory();S.dirty=false;
 }
 function mClose(){
 	switchTo(N);
@@ -373,7 +361,7 @@ function mClose(){
 }
 function bindChange(e,f){e.forEach(function(i){i.onchange=f;});}
 M.markDirty=function(){eS.disabled=eSC.disabled=false;};
-T.on('change',S.markDirty=function(){if(S.dirty) return;S.dirty=true;M.markDirty();});
+S.markDirty=function(){if(S.dirty) return;S.dirty=true;M.markDirty();};
 bindChange([rD,rR,rP,rU],S.markDirty);
 bindChange([I],M.markDirty);
 S.onclick=function(e){
@@ -417,33 +405,13 @@ $('mDel').onclick=function(){
 $('mRen').onclick=function(){
 	renameSection(S.childNodes[S.cur]);
 };
-eS.onclick=function(){
-	if(mSave()) {M.css.data=cloneData(M.data);rt.post('SaveStyle',M.css);}
-};
-eSC.onclick=function(){
-	if(mSave()) {M.css.data=M.data;rt.post('SaveStyle',M.css);}
-	mClose();
-};
+eS.onclick=mSave;
+eSC.onclick=function(){mSave();mClose();};
 M.close=$('mClose').onclick=function(){if(confirmCancel(!eS.disabled)) mClose();};
 function ruleFocus(e){e.target.parentNode.style.width='50%';}
 function ruleBlur(e){e.target.parentNode.style.width='';}
 [rD,rR,rP,rU].forEach(function(i){i.onfocus=ruleFocus;i.onblur=ruleBlur;});
-
-// Theme
-var themes={
-	"default":['default.css','default'],
-	dark:['dark.css','tomorrow-night-eighties'],
-},th=$('sTheme');
-function loadTheme(o){
-	o=themes[o]||themes['default'];
-	$('theme').href='themes/'+o[0];
-	T.setOption('theme',o[1]);
-}
-th.onchange=function(e){
-	var v=e.target.value;
-	loadTheme(v);
-	rt.post('SetOption',{key:'theme',data:v});
-};
+initEditor(function(o){T=o;},{onchange:S.markDirty});
 
 // Load at last
 var ids,map;
@@ -452,7 +420,6 @@ function loadOptions(o){
 	ids.forEach(function(i){addItem(map[i]);});
 	$('cInstall').checked=o.installFile;
 	xF.checked=o.firefoxCSS;
-	loadTheme(th.value=o.theme||'default');
 }
 rt.listen('GotOptions',function(o){loadOptions(o);});	// loadOptions can be rewrited
 rt.listen('UpdateItem',function(r){

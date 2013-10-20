@@ -6,11 +6,8 @@
 		<link rel="stylesheet" type="text/css" id=theme href="themes/default.css" />
 		<link rel="stylesheet" type="text/css" href="lib/codemirror/codemirror.css" />
 		<link rel="stylesheet" type="text/css" href="lib/codemirror/tomorrow-night-eighties.css">
-		<script src='lib/codemirror/codemirror.js'></script>
-		<script src='lib/codemirror/css.js'></script>
-		<script src='lib/codemirror/continuecomment.js'></script>
-		<script src='lib/codemirror/matchbrackets.js'></script>
 		<script src='lib/zip.js/zip.js'></script>
+		<script src='load.js'></script>
 		<title class=i18n>Stylish for Maxthon</title>
 	</head>
 	<body class=fill>
@@ -70,7 +67,7 @@
 							</td>
 						</tr>
 						<tr><td class=i18n>Code:</td></tr>
-						<tr class=expand><td class=expandr><textarea id=mCode class=expanda></textarea></td></tr>
+						<tr class=expand><td id=mCode class=expandr></td></tr>
 						<tr>
 							<td class=right>
 								<button id=mSave class=i18n>Save</button>
@@ -100,13 +97,6 @@
 		</div>
 		<div id=advanced class="float hide">
 			<h2 class=i18n>Advanced</h2>
-			<label>
-				<span class=i18n>Theme:</span>
-				<select id=sTheme>
-					<option value="default" class=i18n>Default</option>
-					<option value="dark" class=i18n>Dark</option>
-				</select>
-			</label>
 			<label><input type=checkbox id=cInstall><span class=i18n>Allow installing style files</span></label>
 			<fieldset>
 				<legend class=i18n>Data</legend>
@@ -118,4 +108,5 @@
 	</body>
 </html>
 <script src="common.js"></script>
+<script src="editor.js"></script>
 <script src="options.js"></script>

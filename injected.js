@@ -15,7 +15,7 @@ rt.listen(id,function(o){
 	if(o.topic=='LoadedStyle') loadStyle(o.data);
 	else if(o.topic=='CheckedStyle') {
 		if(o.data){
-			if(!o.data.updated||o.data.updated<data.updated) fireEvent('styleCanBeUpdated');
+			if(!o.data.updated||o.data.updated<data.updated) fireEvent('styleCanBeUpdatedChrome');
 			else fireEvent('styleAlreadyInstalledChrome');
 		} else fireEvent('styleCanBeInstalledChrome');
 	} else if(o.topic=='ConfirmInstall') {
