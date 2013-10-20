@@ -41,3 +41,4 @@ function setItem(key,val){
 	setString(key,JSON.stringify(val));
 	return val;
 }
+function injectContent(s){br.executeScript('if(window.mx){'+s+'}');}
