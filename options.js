@@ -1,21 +1,7 @@
 var $=document.getElementById.bind(document),
 		N=$('main'),L=$('sList'),O=$('overlay');
 zip.workerScriptsPath='lib/zip.js/';
-function getDate(t){var d=new Date();d.setTime(t*1000);return d.toLocaleDateString();}
-function getTime(r){
-	var d=new Date(),z,m=r.updated.match(/(\d+)\/(\d+)\/(\d+)\s+(\d+):(\d+):(\d+)\s+(\+|-)(\d+)/);
-	d.setUTCFullYear(parseInt(m[1],10));
-	d.setUTCMonth(parseInt(m[2],10)-1);
-	d.setUTCDate(parseInt(m[3],10));
-	d.setUTCHours(parseInt(m[4],10));
-	d.setUTCMinutes(parseInt(m[5],10));
-	d.setUTCSeconds(parseInt(m[6],10));
-	d.setUTCMilliseconds(0);
-	d=d.getTime()/1000;
-	z=parseInt(m[8].substr(0,2),10)*60+parseInt(m[8].substr(2),10);z*=60;
-	if(m[7]!='-') z=-z;d+=z;
-	return d;
-}
+function getDate(t){var d=new Date();d.setTime(t);return d.toLocaleDateString();}
 function getName(n){
 	return n.name?n.name.replace(/&/g,'&amp;').replace(/</g,'&lt;'):'<em>'+_('Null name')+'</em>';
 }
@@ -272,7 +258,7 @@ function check(i){
 	req.open('GET', c.metaUrl, true);
 	req.onload=function(){
 		try {
-			d=getTime(JSON.parse(this.responseText));
+			d=new Date(JSON.parse(this.responseText).updated).getTime();
 			if(!c.updated||c.updated<d) {
 				if(c.updateUrl) return update();
 				else m.innerHTML='<span class=new title="'+_('Please go to homepage for update since there are options for this style.')+'">'+_('New version found.')+'</span>';

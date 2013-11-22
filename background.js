@@ -10,10 +10,10 @@
  * 		enabled:	Boolean
  * 		data:	List	[
  * 					{
- * 					domains:	List	[...]
- * 					regexps:	List	[...]
- * 					urlPrefixes:	List	[...]
- * 					urls:		List	[...]
+ * 					domains:	List
+ * 					regexps:	List
+ * 					urlPrefixes:	List
+ * 					urls:		List
  * 					code:		String
  * 					}
  * 				]
@@ -31,12 +31,6 @@
 		}
 		return c<d;
 	}
-	function showHTML(locales,name) {
-		mx.locale();
-		var lc=mx.getSystemLocale(),i=locales.indexOf(lc);
-		if(i<0) lc=locales[0]||'en';
-		br.tabs.newTab({url:rt.getPrivateUrl()+'locale_html/'+name+'_'+lc+'.html',activate:true});
-	}
 	if(older(l,v)) {	// first use or new update
 		setString('lastVersion',v);
 		if(older(v,'4.1.1.1600'))	// early versions may have bugs
@@ -48,19 +42,6 @@
 
 // Initiate settings
 var ids,map,settings={o:['installFile','firefoxCSS','isApplied'],s:['theme']};
-(function(){
-	if(localStorage.getItem('ids')) return;
-	// upgrade data from Stylish 1 irreversibly
-	var k,v=rt.storage.getConfig('data');
-	if(v) try{
-		rt.storage.setConfig('data',null);
-		v=JSON.parse(v);
-		setItem('ids',v.ids);
-		for(k in v.map) setItem('us:'+k,v.map[k]);
-		setItem('installFile',v.installFile);
-		setItem('isApplied',v.isApplied);
-	}catch(e){}
-})();
 function init(){
 	getItem('installFile',true);
 	getItem('isApplied',true);
