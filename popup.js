@@ -10,6 +10,7 @@ function loadItem(d,c){
 		d.firstChild.innerText='';
 		d.classList.add('disabled');
 	}
+	d.data=c;
 }
 function addItem(h,c){
 	var d=document.createElement('div');
@@ -70,6 +71,7 @@ function load(o){
 	}
 	addItem(_('Enable styles'),{holder:pT,data:isApplied,title:true,onclick:function(){
 		loadItem(this,setItem('isApplied',isApplied=!isApplied));
+		rt.icon.setIconImage('icon'+(isApplied?'':'w'));
 		broadcast('updateStyle();');
 	}});
 	if(d&&d.styles&&d.styles.length) {

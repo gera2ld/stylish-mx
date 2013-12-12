@@ -34,9 +34,9 @@
 	if(older(l,v)) {	// first use or new update
 		setString('lastVersion',v);
 		if(older(v,'4.1.1.1600'))	// early versions may have bugs
-			br.tabs.newTab({url:'https://github.com/gera2ld/Stylish-for-Maxthon/wiki/ObsoleteMaxthon',activate:true});
+			br.tabs.newTab({url:'https://github.com/gera2ld/Stylish-mx/wiki/ObsoleteMaxthon',activate:true});
 		else if(l&&older(l,'4.1.1.1600'))	// update caused data loss
-			br.tabs.newTab({url:'https://github.com/gera2ld/Stylish-for-Maxthon/wiki/DataLoss',activate:true});
+			br.tabs.newTab({url:'https://github.com/gera2ld/Stylish-mx/wiki/DataLoss',activate:true});
 	}
 })(getString('lastVersion',''),window.external.mxVersion);
 
@@ -44,8 +44,8 @@
 var ids,map,settings={o:['installFile','firefoxCSS','isApplied'],s:['theme']};
 function init(){
 	getItem('installFile',true);
-	getItem('isApplied',true);
 	getItem('firefoxCSS',false);
+	rt.icon.setIconImage('icon'+(getItem('isApplied',true)?'':'w'));
 }
 init();ids=[];map={};
 getItem('ids',[]).forEach(function(i){var o=getItem('us:'+i);if(o) {ids.push(i);map[i]=o;}});
