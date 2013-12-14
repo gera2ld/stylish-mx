@@ -1,36 +1,32 @@
 (function(){
-// Message
-var rt=window.external.mxGetRuntime(),
-		id=Date.now()+Math.random().toString().substr(1),
-		frames=[{source:id,origin:window.location.href}];
-function post(topic,data,o){
-	rt.post(topic,{source:o&&o.id||id,origin:o&&o.origin||window.location.href,data:data});
-}
-function fireEvent(t){
-	var e=document.createEvent('Events');
-	e.initEvent(t,false,false,document.defaultView,null);
-	document.dispatchEvent(e);
+// Messages
+var rt=window.external.mxGetRuntime(),id=Date.now()+Math.random().toString().slice(1),
+		callbacks={},B='Background',P='Popup';
+function post(d,o,callback){
+	o.src={id:id,url:window.location.href};
+	if(callback) {
+		o.callback=Math.random().toString();
+		callbacks[o.callback]=callback;
+	}
+	rt.post(d,o);
 }
 rt.listen(id,function(o){
-	if(o.topic=='LoadedStyle') loadStyle(o.data);
-	else if(o.topic=='CheckedStyle') {
-		if(o.data){
-			if(!o.data.updated||o.data.updated<data.updated) fireEvent('styleCanBeUpdatedChrome');
-			else fireEvent('styleAlreadyInstalledChrome');
-		} else fireEvent('styleCanBeInstalledChrome');
-	} else if(o.topic=='ConfirmInstall') {
-		if(o.data&&confirm(o.data)) {
-			if(callback) callback();
-			else if(/\.json$/.test(window.location.href)) post('ParseJSON',document.body.innerText);
-			else post('ParseFirefoxCSS',document.body.innerText);
-		}
-	} else if(o.topic=='ParsedCSS') {
-		if(location.host=='userstyles.org') {
-			if(o.data.status<0) alert(o.data.message);
-			else fireEvent('styleInstalled');
-		} else showMessage(o.data.message);
-	} else if(o.topic=='AlterStyle') alterStyle(o.data);
+	var maps={
+		AlterStyle:alterStyle,
+		Callback:function(o){
+			var f=callbacks[o.id];
+			if(f) f(o.data);
+			delete callbacks[o.id];
+		},
+	},f=maps[o.cmd];
+	if(f) f(o.data);
 });
+
+function fireEvent(t){
+	var e=document.createEvent('Events');
+	e.initEvent(t,false,false);
+	document.dispatchEvent(e);
+}
 function showMessage(data){
 	var d=document.createElement('div');
 	d.setAttribute('style','position:fixed;border-radius:5px;background:orange;padding:20px;z-index:9999;box-shadow:5px 10px 15px rgba(0,0,0,0.4);transition:opacity 1s linear;opacity:0;text-align:left;');
@@ -42,16 +38,16 @@ function showMessage(data){
 	setTimeout(function(){d.style.opacity=1;},1);	// fade in
 	setTimeout(function(){d.style.opacity=0;setTimeout(close,1000);},3000);	// fade out
 }
-window.updateStyle=function(i){
-	var o={frames:frames};if(i) o.id=i;
-	post('LoadStyle',o);
+window.updateStyle=function(id,o){	// o==-1 for disabled, 0 for removed, 1 for enabled
+	if(o>0||!id) post(B,{cmd:'LoadStyle',data:id},loadStyle);
+	else {var d={};d[id]=o?'':false;loadStyle({styles:d});}
 };
 window.setPopup=function(){
-	post('SetPopup',{
+	post(P,{cmd:'SetPopup',data:{
 		styles:_styles,
 		astyles:Object.getOwnPropertyNames(astyles),
 		cstyle:cur
-	});
+	}});
 };
 
 // CSS applying
@@ -60,14 +56,14 @@ function styleAdd(i){
 	if(!(i in fstyles)) {fstyles[i]=0;_styles.push(i);}fstyles[i]++;
 }
 function styleRemove(i){
-	if(i in fstyles) {fstyles[i]--;if(!fstyles[i]) _styles.splice(_styles.indexOf(i),1);}
+	if((i in fstyles)&&!--fstyles[i]) _styles.splice(_styles.indexOf(i),1);
 }
 function loadStyle(o){
 	var i,c;
 	if('isApplied' in o) isApplied=o.isApplied;
-	if(o.data) {
-		for(i in o.data) {
-			if(typeof o.data[i]=='string') {styles[i]=o.data[i];styleAdd(i);}
+	if(o.styles) {
+		for(i in o.styles) {
+			if(typeof o.styles[i]=='string') {styles[i]=o.styles[i];styleAdd(i);}
 			else {delete styles[i];styleRemove(i);}
 		}
 	}
@@ -85,7 +81,7 @@ function loadStyle(o){
 		style=null;
 	}
 }
-post('LoadStyle');
+post(B,{cmd:'LoadStyle'},loadStyle);
 
 // Alternative style sheets
 var astyles={},cur=undefined;
@@ -101,11 +97,11 @@ function alterStyle(s){
 window.addEventListener('DOMContentLoaded',function(){
 	Array.prototype.forEach.call(document.querySelectorAll('link[rel=stylesheet][title]'),addStylesheet);
 	Array.prototype.forEach.call(document.querySelectorAll('link[rel="alternate stylesheet"][title]'),addStylesheet);
-	post('GetPopup');
+	post(P,{cmd:'GetPopup'});
 },false);
 
 // Stylish fix
-var data=null,ping=null,callback=null;
+var data=null,ping=null;
 function fixMaxthon(){
 	function getData(k){
 		var s=document.querySelector('link[rel='+k+']');
@@ -117,18 +113,28 @@ function fixMaxthon(){
 		if(this.status==200) try{
 			data.updated=new Date(JSON.parse(req.responseText).updated).getTime();
 		} catch(e) {}
-		post('CheckStyle',url);
+		post(B,{cmd:'CheckStyle',data:url},function(o){
+			if(o){
+				if(!o.updated||o.updated<data.updated) fireEvent('styleCanBeUpdatedChrome');
+				else fireEvent('styleAlreadyInstalledChrome');
+				data.id=o.id;
+			} else fireEvent('styleCanBeInstalledChrome');
+		});
 	};
 	req.send();
 
 	data={
-		id:url,
+		url:url,
 		metaUrl:metaUrl,
 	};
 	function update(){
-		data.url=getData('stylish-code-chrome');
-		callback=function(){post('InstallStyle',data);callback=null;};
-		post('InstallStyle');
+		data.updateUrl=getData('stylish-code-chrome');
+		post(B,{cmd:'InstallStyle'},function(o){
+			if(o&&confirm(o)) post(B,{cmd:'InstallStyle',data:data},function(o){
+				if(o.status<0) alert(o.message);
+				else fireEvent('styleInstalled');
+			});
+		});
 	}
 	function install(){
 		ping=function(){
@@ -141,12 +147,19 @@ function fixMaxthon(){
 	document.addEventListener('stylishInstallChrome',install,false);
 	document.addEventListener('stylishUpdateChrome',update,false);
 }
-if(/\.user\.css$|\.json$/.test(window.location.href)) (function(){
-	function install(){
-		if(document&&document.body&&!document.querySelector('title')) post('InstallStyle');
+if(/\.user\.css$|\.json$/.test(window.location.href)) {
+	function rawInstall(){
+		function installed(o){showMessage(o.message);}
+		if(document&&document.body&&!document.querySelector('title')) post(B,{cmd:'InstallStyle'},function(o){
+			if(o&&confirm(o)) {
+				o=document.body.innerText;
+				if(/\.json$/.test(window.location.href)) post(B,{cmd:'ParseJSON',data:{code:o}},installed);
+				else post(B,{cmd:'ParseFirefoxCSS',data:o},installed);
+			}
+		});
 	}
-	if(document.readyState!='complete') window.addEventListener('load',install,false);
-	else install();
-})(); else if(/^http:\/\/userstyles\.org\/styles\//.test(window.location.href))
+	if(document.readyState!='complete') window.addEventListener('load',rawInstall,false);
+	else rawInstall();
+} else if(/^http:\/\/userstyles\.org\/styles\//.test(window.location.href))
 	window.addEventListener('DOMContentLoaded',fixMaxthon,false);
 })();

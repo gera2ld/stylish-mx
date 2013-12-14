@@ -1,86 +1,322 @@
-/* ===============Data format 0.3==================
- * ids	List [id]
- * us:id Item	{
- * 		name:	String(stylish-description)
- * 		url:	String		// Homepage
- * 		id:	url||random
- * 		metaUrl:	String	// for update checking
- * 		updateUrl:	String	// for update
- * 		updated:	Int
- * 		enabled:	Boolean
- * 		data:	List	[
- * 					{
- * 					domains:	List
- * 					regexps:	List
- * 					urlPrefixes:	List
- * 					urls:		List
- * 					code:		String
- * 					}
- * 				]
- * 		}
- */
+(function(){
+function older(a,b,c,d){
+	a=a.split('.');b=b.split('.');c=d=0;
+	while(a.length||b.length){
+		c=parseInt(a.shift())||0;
+		d=parseInt(b.shift())||0;
+		if(c!=d) break;
+	}
+	return c<d;
+}
 
 // Check Maxthon version
 (function(l,v){
-	function older(a,b,c,d){
-		a=a.split('.');b=b.split('.');c=d=0;
-		while(a.length||b.length){
-			c=parseInt(a.shift())||0;
-			d=parseInt(b.shift())||0;
-			if(c!=d) break;
-		}
-		return c<d;
-	}
 	if(older(l,v)) {	// first use or new update
-		setString('lastVersion',v);
+		localStorage.lastVersion=v;
 		if(older(v,'4.1.1.1600'))	// early versions may have bugs
 			br.tabs.newTab({url:'https://github.com/gera2ld/Stylish-mx/wiki/ObsoleteMaxthon',activate:true});
-		else if(l&&older(l,'4.1.1.1600'))	// update caused data loss
-			br.tabs.newTab({url:'https://github.com/gera2ld/Stylish-mx/wiki/DataLoss',activate:true});
 	}
-})(getString('lastVersion',''),window.external.mxVersion);
+})(localStorage.lastVersion||'',window.external.mxVersion);
 
-// Initiate settings
-var ids,map,settings={o:['installFile','firefoxCSS','isApplied'],s:['theme']};
-function init(){
-	getItem('installFile',true);
-	getItem('firefoxCSS',false);
-	rt.icon.setIconImage('icon'+(getItem('isApplied',true)?'':'w'));
+/* ===============Data format 0.4==================
+ * Database: Stylish
+ * metas: {
+ * 		id: Auto
+ * 		name: String
+ * 		url: String
+ * 		metaUrl: String
+ * 		updateUrl: String
+ * 		updated: Integer
+ * 		enabled: 0|1
+ * }
+ * styles: {
+ * 		metaId: Integer
+ * 		name: String
+ * 		domains: List
+ * 		regexps: List
+ * 		urlPrefixes: List
+ * 		urls: List
+ * 		code: String
+ * }
+ */
+function dbError(t,e){
+	console.log('Database error: '+e.message);
 }
-init();ids=[];map={};
-getItem('ids',[]).forEach(function(i){var o=getItem('us:'+i);if(o) {ids.push(i);map[i]=o;}});
-
+function initDatabase(callback){
+	db=openDatabase('Stylish','0.4','Stylish data',10*1024*1024);
+	db.transaction(function(t){
+		function executeSql(_t,r){
+			var s=sql.shift();
+			if(s) t.executeSql(s,[],executeSql,dbError);
+			else if(callback) callback();
+		}
+		var count=0,sql=[
+			'CREATE TABLE IF NOT EXISTS metas(id INTEGER PRIMARY KEY,name VARCHAR,url VARCHAR,metaUrl VARCHAR,updateUrl VARCHAR,updated INTEGER,enabled INTEGER)',
+			'CREATE TABLE IF NOT EXISTS styles(metaId INTEGER,name VARCHAR,domains TEXT,regexps TEXT,urlPrefixes TEXT,urls TEXT,code TEXT)',
+		];
+		executeSql();
+	});
+}
+function upgradeData(callback){
+	function finish(){if(callback) callback();}
+	function upgrade04(){
+		var k,v;
+		while(k=localStorage.key(i)) {
+			if(k in settings) {i++;continue;}
+			v=localStorage.getItem(k);
+			localStorage.removeItem(k);
+			if(/^us:/.test(k)) {
+				o=JSON.parse(v);
+				if(/^https?:/.test(o.id)&&!o.url) o.url=o.id;
+				delete o.id;
+				if(o.updated&&o.updated<1e12) o.updated*=1000;
+				saveStyle(o,null,upgrade04);
+				return;
+			}
+		}
+		localStorage.version_storage=0.4;
+		finish();
+	}
+	var version=localStorage.version_storage||'',i=0;
+	if(older(version,'0.4')) upgrade04();
+	else finish();
+}
+function getMeta(o){
+	return {
+		id:o.id,
+		name:o.name,
+		url:o.url,
+		metaUrl:o.metaUrl,
+		updateUrl:o.updateUrl,
+		updated:o.updated,
+		enabled:o.enabled,
+	};
+}
+function getSection(o){
+	function notEmpty(i){return i;}
+	return {
+		name:o.name||'',
+		domains:o.domains.split('\n').filter(notEmpty),
+		regexps:o.regexps.split('\n').filter(notEmpty),
+		urlPrefixes:o.urlPrefixes.split('\n').filter(notEmpty),
+		urls:o.urls.split('\n').filter(notEmpty),
+		code:o.code||'',
+	};
+}
+function initStyles(callback){
+	ids=[];metas={};
+	db.readTransaction(function(t){
+		t.executeSql('SELECT * FROM metas',[],function(t,r){
+			var i,o;
+			for(i=0;i<r.rows.length;i++) {
+				o=r.rows.item(i);
+				ids.push(o.id);metas[o.id]=getMeta(o);
+			}
+			if(callback) callback();
+		});
+	});
+}
 function newStyle(c){
+	c=c||{};
 	var r={
-		name:c?c.name:_('New Style'),
-		url:c&&c.url,
-		id:c&&c.id,
-		metaUrl:c&&c.metaUrl,
-		updated:c?c.updated:null,
-		enabled:c&&c.enabled!=undefined?c.enabled:1,
+		name:c.name||_('labelNewStyle'),
+		url:c.url,
+		id:c.id,
+		metaUrl:c.metaUrl,
+		updated:c.updated||null,
+		enabled:c.enabled!=undefined?c.enabled:1,
 		data:[]
 	};
-	if(!r.id) r.id=Date.now()+Math.random().toString().substr(1);
 	return r;
 }
-function saveStyle(o){
-	if(!map[o.id]) {ids.push(o.id);setItem('ids',ids);}
-	setItem('us:'+o.id,map[o.id]=o);
-	broadcast('updateStyle('+JSON.stringify(o.id)+');');
+function enableStyle(o,src,callback){
+	var s=metas[o.id];if(!s) return;
+	s.enabled=o.data?1:0;
+	db.transaction(function(t){
+		t.executeSql('UPDATE metas SET enabled=? WHERE id=?',[s.enabled,o.id],function(t,r){
+			if(r.rowsAffected) {
+				if(s.enabled) t.executeSql('SELECT * FROM styles WHERE metaId=?',[o.id],function(t,r){
+					var d=[],i;
+					if(r.rows.length) for(i=0;i<r.rows.length;i++) d.push(getSection(r.rows.item(i)));
+				});
+				broadcast('updateStyle('+o.id+','+(s.enabled?1:-1)+')');
+				updateItem({id:o.id,status:0});
+				if(callback) callback();
+			}
+		},dbError);
+	});
 }
-rt.listen('RemoveStyle',function(i){
-	i=ids.splice(i,1)[0];setItem('ids',ids);
-	delete map[i];localStorage.removeItem('us:'+i);
-	broadcast('updateStyle('+JSON.stringify(i)+');');
-});
-
-rt.listen('SaveStyle',saveStyle);
-rt.listen('EnableStyle',function(e,o){
-	o=map[e.id];o.enabled=e.data;saveStyle(o);
-	rt.post('UpdateItem',{status:2,item:ids.indexOf(o.id),obj:o});
-});
-function parseFirefoxCSS(o){
-	var c=null,i,p,m,r,code=o.data,data=[],d={};
+function saveStyle(o,src,callback,m){
+	function finish(){
+		if(o.data) {
+			broadcast('updateStyle('+o.id+','+(o.enabled?1:-1)+')');
+			delete o.data;
+		}
+		updateItem(s);
+		if(callback) callback(o);
+	}
+	var s={status:0,message:m==null?_('msgUpdated'):m};
+	db.transaction(function(t){
+		var d=[];
+		d.push(parseInt(o.id)||null);
+		d.push(o.name);
+		d.push(o.url);
+		d.push(o.metaUrl);
+		d.push(o.updateUrl);
+		d.push(o.updated||0);
+		d.push(o.enabled);
+		t.executeSql('REPLACE INTO metas(id,name,url,metaUrl,updateUrl,updated,enabled) VALUES(?,?,?,?,?,?,?)',d,function(t,r){
+			s.id=o.id=r.insertId;
+			if(!(o.id in metas)) {ids.push(o.id);s.status=1;s.message=_('msgInstalled');}
+			s.obj=metas[o.id]=o;
+			if(o.data) t.executeSql('DELETE FROM styles WHERE metaId=?',[o.id],function(t,r){
+				var i=0;
+				function addSection(){
+					var d=[],r=o.data[i++];
+					if(r) {
+						d.push(o.id);
+						d.push(r.name||'');
+						d.push(r.domains.join('\n'));
+						d.push(r.regexps.join('\n'));
+						d.push(r.urlPrefixes.join('\n'));
+						d.push(r.urls.join('\n'));
+						d.push(r.code);
+						t.executeSql('INSERT INTO styles(metaId,name,domains,regexps,urlPrefixes,urls,code) VALUES(?,?,?,?,?,?,?)',d,addSection,dbError);
+					} else finish();
+				}
+				addSection();
+			},dbError); else finish();
+		},dbError);
+	});
+}
+function removeStyle(i,src,callback){
+	var id=ids.splice(i,1)[0];
+	db.transaction(function(t){
+		t.executeSql('DELETE FROM metas WHERE id=?',[id],function(t,r){
+			t.executeSql('DELETE FROM styles WHERE metaId=?',[id],function(t,r){
+				delete metas[id];
+				broadcast('updateStyle('+id+')');
+			},dbError);
+		},dbError);
+	});
+}
+function getStyle(id,src,callback,t){
+	function get(t){
+		t.executeSql('SELECT * FROM styles WHERE metaId=?',[id],function(t,r){
+			var o=metas[id];
+			if(o) {
+				o=getMeta(o);o.data=[];
+				for(i=0;i<r.rows.length;i++) o.data.push(getSection(r.rows.item(i)));
+				if(callback) callback(o);
+			}
+		});
+	}
+	if(t) get(t); else db.readTransaction(get);
+}
+function getStyles(ids,src,callback){
+	var d=[];
+	db.readTransaction(function(t){
+		function loop(){
+			var id=ids.shift();
+			if(id) getStyle(id,src,function(o){
+				d.push(o);loop();
+			},t); else callback(d);
+		}
+		loop();
+	});
+}
+function exportZip(o,src,callback){
+	var data={settings:settings};
+	getStyles(o,src,function(s){
+		data.styles=s;callback(data);
+	});
+}
+function str2RE(s){return s.replace(/(\.|\?|\/)/g,'\\$1').replace(/\*/g,'.*?');}
+function testURL(url,d){
+	function testDomain(i){
+		return RegExp('://(|[^/]*\\.)'+i.replace(/\./g,'\\.')+'/').test(url);
+	}
+	function testRegexp(i){
+		return RegExp(i).test(url);
+	}
+	function testUrlPrefix(i){
+		return url.slice(0,i.length)==i;
+	}
+	function testUrl(i){
+		return i==url;
+	}
+	function test(k){
+		if(f>0) return;
+		var r=d[k],i,o;
+		if(k=='domains') o=testDomain;
+		else if(k=='regexps') o=testRegexp;
+		else if(k=='urlPrefixes') o=testUrlPrefix;
+		else if(k=='urls') o=testUrl;
+		if(r.some(o)) {f=1;return;}
+		if(r.length&&f<0) f=0;
+	}
+	var f=-1;
+	test('domains');test('regexps');test('urlPrefixes');test('urls');
+	if(f) return d.code;
+}
+function loadStyle(o,src,callback) {
+	function loaded(t,r){
+		var i,v,s,d,o,c={};
+		for(i=0;i<r.rows.length;i++) {
+			v=r.rows.item(i);
+			s=getSection(v);
+			d=testURL(src.url,s);
+			if(d!=null) {
+				o=c[v.metaId];
+				if(!o) o=c[v.metaId]=[];
+				if(d&&metas[v.metaId].enabled) o.push(d);	// ignore null string
+			}
+		}
+		for(i in c) c[i]=c[i].join('\n');
+		callback({isApplied:settings.isApplied,styles:c});
+	}
+	db.readTransaction(function(t){
+		if(o) t.executeSql('SELECT * FROM styles WHERE metaId=?',[o],loaded,dbError);
+		else t.executeSql('SELECT * FROM styles ORDER BY metaId',[],loaded,dbError);
+	});
+}
+function getData(d,src,callback) {
+	var data={styles:[],settings:settings};
+	ids.forEach(function(i){
+		var o=metas[i];
+		data.styles.push(o);
+	});
+	if(callback) callback(data);
+}
+function fetchURL(url, cb){
+	var req=new XMLHttpRequest();
+	if(cb) req.onloadend=cb;
+	if(url.length>2000) {
+		var parts=url.split('?');
+		req.open('POST',parts[0],true);
+		req.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+		req.send(parts[1]);
+	} else {
+		req.open('GET', url, true);
+		req.send();
+	}
+}
+function checkStyle(d,src,callback){
+	db.readTransaction(function(t){
+		t.executeSql('SELECT * FROM metas WHERE url=?',[d],function(t,r){
+			var o=null;
+			if(r.rows.length) o=getMeta(r.rows.item(0));
+			callback(o);
+		},dbError);
+	});
+}
+function installStyle(o,src,callback){
+	if(o) fetchURL(o.updateUrl,function(){
+		o.status=this.status;o.code=this.responseText;parseCSS(o,src,callback);
+	}); else callback(_('msgConfirm'));
+}
+function parseFirefoxCSS(d,src,callback){
+	var c=null,i,p,m,r,code=d.code.replace(/\s+$/,''),data=[];
 	code.replace(/\/\*\s+@(\w+)\s+(.*?)\s+\*\//g,function(v,g1,g2){
 		if(d[g1]==undefined) {
 			d[g1]=g2;
@@ -107,80 +343,51 @@ function parseFirefoxCSS(o){
 		code=code.slice(i+1).replace(/^\s+/,'');
 		data.push(r);
 	}
-	r={status:0,message:_('Style updated.')};
-	if(d.id) r.item=ids.indexOf(d.id);
 	if(!code) {
-		if(d.id) c=map[d.id];
-		else d.id=Date.now()+Math.random().toString().substr(1);
-		if(!c) {c=newStyle(d);r.status=1;}
+		c=metas[d.id];
+		if(!c) c=newStyle(d);
 		else for(i in d) c[i]=d[i];
-		c.data=data;saveStyle(c);
-		r.item=ids.indexOf(c.id);r.obj=c;
-	} else {
-		r.status=-1;
-		r.message=_('Error parsing CSS code!');
-	}
-	if(o.source) rt.post(o.source,{topic:'ParsedCSS',data:r});
-	rt.post('UpdateItem',r);
+		c.data=data;
+		saveStyle(c,src,callback);
+	} else
+		callback({status:-1,message:_('msgErrorParsing')});
 }
-function fetchURL(url, load){
-	var req=new XMLHttpRequest();
-	if(load) req.onloadend=load;
-	if(url.length>2000) {
-		var parts=url.split('?');
-		req.open('POST',parts[0],true);
-		req.setRequestHeader("Content-type","application/x-www-form-urlencoded");
-		req.send(parts[1]);
-	} else {
-		req.open('GET', url, true);
-		req.send();
+function parseCSS(o,src,callback){
+	var j,c=null,d=[];
+	if(o.status!=200) {
+		callback({id:o.id,status:-1,message:_('msgErrorFetchingStyle')});
+		return;
 	}
-}
-function parseCSS(o){
-	var d=o.data,j=null,c,data=[],r={status:0,message:_('Style updated.')};
-	if(d.id) r.item=ids.indexOf(d.id);
-	if(d.status&&d.status!=200) {r.status=-1;r.message=_('Error fetching CSS code!');}
-	else try{
-		j=JSON.parse(d.code);
-	}catch(e){
-		r.message=_('Error parsing CSS code!')+'\n'+e.stack;
-		r.status=-1;
-	}
-	if(j) {
-		j.sections.forEach(function(i){
-			data.push({
-				domains:i.domains,
-				regexps:i.regexps,
-				urlPrefixes:i.urlPrefixes,
-				urls:i.urls,
-				code:i.code
-			});
-		});
-		if(d.id&&(c=map[d.id])) {
-			r.item=ids.indexOf(d.id);
-			c.updated=d.updated;
-		} else {
-			r.item=ids.length;
-			d.name=j.name;
-			d.enabled=1;
-			c=newStyle(d);
-			r.status=1;
-		}
-		c.data=data;c.url=j.url;c.updateUrl=j.updateUrl;
-		saveStyle(c);r.obj=c;
-	}
-	if(o.source) rt.post(o.source,{topic:'ParsedCSS',data:r});
-	rt.post('UpdateItem',r);
-}
-function parseJSON(o){
-	var r={status:0,message:_('Style updated.')},c;
 	try{
-		o=JSON.parse(o.data);
-		if(!map[o.id]) {
-			r.status=1;
-			r.message=_('Style installed.');
-		}
+		j=JSON.parse(o.code);
+	}catch(e){
+		console.log(e);
+		callback({id:o.id,status:-1,message:_('msgErrorParsing')});
+		return;
+	}
+	j.sections.forEach(function(i){
+		d.push({
+			name:i.name||'',
+			domains:i.domains,
+			regexps:i.regexps,
+			urlPrefixes:i.urlPrefixes,
+			urls:i.urls,
+			code:i.code
+		});
+	});
+	c=o.id&&metas[o.id];
+	if(!c) {
+		o.name=j.name;
 		c=newStyle(o);
+	} else c.updated=o.updated;
+	c.data=d;
+	c.updateUrl=j.updateUrl;
+	saveStyle(c,src,callback);
+}
+function parseJSON(o,src,callback){
+	try{
+		o=JSON.parse(o.code);
+		var c=newStyle(o);
 		o.data.forEach(function(i){
 			c.data.push({
 				name:i.name||'',
@@ -191,90 +398,73 @@ function parseJSON(o){
 				code:i.code||'',
 			});
 		});
-		saveStyle(c);
+		saveStyle(c,src,callback);
 	}catch(e){
 		console.log(e);
-		r.status=-1;
-		r.message=_('Error parsing CSS code!');
+		callback({status:-1,message:_('msgErrorParsing')});
 	}
-	if(o.source) rt.post(o.source,{topic:'ParsedCSS',data:r});
-	if(c) {r.item=ids.indexOf(c.id);rt.post('UpdateItem',r);}
-	return r;
 }
-rt.listen('NewStyle',function(o){saveStyle(o=newStyle());rt.post('GotStyle',o);});
-rt.listen('ExportZip',function(o){
-	var r={data:[],settings:{}};
-	o.data.forEach(function(c){var o=map[c];if(o) r.data.push(o);});
-	settings.o.concat(settings.s).forEach(function(i){r.settings[i]=getItem(i);});
-	rt.post('ExportStart',r);
-});
-rt.listen('ParseCSS',parseCSS);
-rt.listen('ParseJSON',parseJSON);
-rt.listen('ParseFirefoxCSS',parseFirefoxCSS);
-rt.listen('InstallStyle',function(o){
-	if(!o.data) {
-		if(getItem('installFile')) rt.post(o.source,{topic:'ConfirmInstall',data:_('Do you want to install this style?')});
-	} else fetchURL(o.data.url,function(){
-		o.data.status=this.status;o.data.code=this.responseText;parseCSS(o);
+var _update={};
+function checkUpdateO(o){
+	if(_update[o.id]) return;_update[o.id]=1;
+	function finish(){delete _update[o.id];}
+	var r={id:o.id,hideUpdate:1,status:2};
+	if(o.metaUrl) {
+		r.message=_('msgCheckingForUpdate');updateItem(r);
+		fetchURL(o.metaUrl,function(){
+			r.message=_('msgErrorFetchingUpdateInfo');
+			delete r.hideUpdate;
+			if(this.status==200) try{
+				d=new Date(JSON.parse(this.responseText).updated).getTime();
+				if(!o.updated||o.updated<d) {
+					if(o.updateUrl) {
+						r.message=_('msgUpdating');
+						r.hideUpdate=1;
+						fetchURL(o.updateUrl,function(){
+							parseCSS({status:this.status,id:c.id,updated:d,code:this.responseText});
+						});
+					} else r.message='<span class=new>'+_('msgNewVersion')+'</span>';
+				} else r.message=_('msgNoUpdate');
+			} catch(e) {console.log(e);}
+			updateItem(r);finish();
+		});
+	} else finish();
+}
+function checkUpdate(id,src,callback){
+	checkUpdateO(metas[id]);
+}
+function checkUpdateAll(o,src,callback){
+	ids.forEach(function(i){
+		var o=metas[i];
+		if(o.metaUrl) checkUpdateO(o);
 	});
-});
-function testURL(url,e){
-	function str2RE(s){return s.replace(/(\.|\?|\/)/g,'\\$1').replace(/\*/g,'.*?');}
-	function testDomain(){
-		r=d.domains;
-		for(i=0;i<r.length;i++) if(RegExp('://(|[^/]*\\.)'+r[i].replace(/\./g,'\\.')+'/').test(url)) return f=1;
-		if(i&&f<0) f=0;
-	}
-	function testRegexp(){
-		r=d.regexps;
-		for(i=0;i<r.length;i++) if(RegExp(r[i]).test(url)) return f=1;
-		if(i&&f<0) f=0;
-	}
-	function testUrlPrefix(){
-		r=d.urlPrefixes;
-		for(i=0;i<r.length;i++) if(url.substr(0,r[i].length)==r[i]) return f=1;
-		if(i&&f<0) f=0;
-	}
-	function testUrl(){
-		r=d.urls;
-		for(i=0;i<r.length;i++) if(r[i]==url) return f=1;
-		if(i&&f<0) f=0;
-	}
-	var k,f,d,i,r,c=[];
-	if(e) for(k=0;k<e.data.length;k++){
-		d=e.data[k];f=-1;
-		testDomain();testRegexp();testUrlPrefix();testUrl();
-		if(f) c.push(e.enabled?d.code:'');
-	}
-	if(c.length) return c.join('');
 }
-rt.listen('LoadStyle',function(o){
-	function load(source,url,id){
-		function getCSS(i){
-			var d=testURL(url,map[i]);c[i]=d;
-		}
-		var c={};
-		if(id) getCSS(id); else ids.forEach(getCSS);
-		c={topic:'LoadedStyle',data:{isApplied:isApplied,data:c}};
-		rt.post(source,c);
+
+function getOption(k,src,callback){
+	var v=localStorage.getItem(k)||'';
+	try{
+		v=JSON.parse(v);
+	}catch(e){
+		return false;
 	}
-	var isApplied=getItem('isApplied'),d=o.data;
-	if(d&&d.frames) d.frames.forEach(function(i){load(i.source,i.origin,d.id);});
-	else load(o.source,o.origin,d&&d.id);
-});
-rt.listen('CheckStyle',function(o){rt.post(o.source,{topic:'CheckedStyle',data:map[o.data]});});
-
-rt.listen('GetOptions',function(){
-	var r={ids:ids,map:map};
-	function get(l,f){l.forEach(function(i){r[i]=f(i);});}
-	get(settings.o,getItem);get(settings.s,getString);
-	rt.post('GotOptions',r);
-});
-rt.listen('SetOption',function(o){
-	if(o.wkey) window[o.wkey]=o.data;
-	(typeof o.data=='string'?setString:setItem)(o.key,o.data);
-});
-
+	settings[k]=v;
+	if(callback) callback(v);
+	return true;
+}
+function setOption(o,src,callback){
+	if(!o.check||(o.key in settings)) {
+		localStorage.setItem(o.key,JSON.stringify(o.value));
+		settings[o.key]=o.value;
+	}
+	if(callback) callback(o.value);
+}
+function initSettings(){
+	function init(k,v){
+		if(!getOption(k)) setOption({key:k,value:v});
+	}
+	init('isApplied',true);
+	init('firefoxCSS',false);
+}
 function reinit(){
 	var f=function(f){
 		var c=0;
@@ -288,20 +478,81 @@ function reinit(){
 	};
 	f='('+f.toString()+')(window.delayedReload)';
 	f='(function(s){var o=document.createElement("script");o.innerHTML=s;document.body.appendChild(o);document.body.removeChild(o);})('+JSON.stringify(f)+')';
-	for(var i=0;i<br.tabs.length;i++) {
-		var t=br.tabs.getTab(i);
-		br.executeScript(f,t.id);
-	}
+	broadcast(f);
+}
+function updateItem(r){
+	r.obj=metas[r.id];
+	rt.post('UpdateItem',r);
 }
 
-var optionsURL=new RegExp('^'+(rt.getPrivateUrl()+'options.html').replace(/\./g,'\\.'));
-br.onBrowserEvent=function(o){
-	switch(o.type){
-		case 'TAB_SWITCH': case 'ON_NAVIGATE':
-			var tab=br.tabs.getCurrentTab(),i,t;
-			if(optionsURL.test(tab.url)) for(i=0;t=br.tabs.getTab(i);i++) if(t.id!=tab.id&&optionsURL.test(t.url)) {
-				tab.close();t.activate();
-			}
-	}
-};
-reinit();
+var db,settings={},ids,metas;
+initSettings();
+initDatabase(function(){
+	initStyles(function(){
+		upgradeData(function(){
+			rt.listen('Background',function(o){
+				/*
+				 * o={
+				 * 	cmd: String,
+				 * 	src: {
+				 * 		id: String,
+				 * 		url: String,
+				 * 	},
+				 * 	callback: String,
+				 * 	data: Object
+				 * }
+				 */
+				function callback(d){
+					rt.post(o.src.id,{cmd:'Callback',data:{id:o.callback,data:d}});
+				}
+				var maps={
+					GetData:getData,
+					LoadStyle:loadStyle,
+					ParseFirefoxCSS:parseFirefoxCSS,
+					CheckStyle:checkStyle,
+					InstallStyle:installStyle,
+					ParseJSON:parseJSON,
+					GetMetas:function(ids,src,callback){	// for popup menu
+						var d=[];
+						ids.forEach(function(i){d.push(metas[i]);});
+						callback(d);
+					},
+					EnableStyle:enableStyle,
+					RemoveStyle:removeStyle,
+					GetOption:getOption,
+					SetOption:setOption,
+					NewStyle:function(o,src,callback){callback(newStyle());},
+					GetStyle:getStyle,	// for user edit
+					SaveStyle:function(o,src,callback){saveStyle(o,src,callback,'');},
+					CheckUpdate:checkUpdate,
+					CheckUpdateAll:checkUpdateAll,
+					ExportZip:exportZip,
+				},f=maps[o.cmd];
+				if(f) f(o.data,o.src,callback);
+				return true;
+			});
+			rt.icon.setIconImage('icon'+(settings.isApplied?'':'w'));
+			reinit();
+		});
+	});
+});
+
+(function(url){
+	var l=url.length,tids={};
+	br.onBrowserEvent=function(o){
+		var t,tab;
+		switch(o.type){
+			case 'TAB_SWITCH':
+				tab=br.tabs.getCurrentTab();
+				if(tab.url.slice(0,l)==url) {
+					for(var i=0;i<br.tabs.length;i++) {
+						t=br.tabs.getTab(i);
+						if(t.id!=tab.id&&t.url.slice(0,l)==url) {
+							tab.close();t.activate();
+						}
+					}
+				}
+		}
+	};
+})(rt.getPrivateUrl()+'options.html');
+})();

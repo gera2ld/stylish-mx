@@ -1,5 +1,6 @@
-function $(i){return document.getElementById(i);}
-var P=$('popup'),A=$('astyles'),tab,pR=P.querySelector('.expand'),
+(function(){
+var $=document.getElementById.bind(document),P=$('popup'),
+	A=$('astyles'),tab,pR=P.querySelector('.expand'),
 	pT=P.querySelector('td'),pB=P.querySelector('.expanda'),
 	cT=A.querySelector('td'),cB=A.querySelector('.expanda');
 function loadItem(d,c){
@@ -27,13 +28,15 @@ function addItem(h,c){
 	if('data' in c) loadItem(d,c.data);
 	return d;
 }
-function menuStyle(i) {
-	var c=getItem('us:'+i),n=c.name?c.name.replace(/&/g,'&amp;').replace(/</g,'&lt;'):'<em>'+_('Null name')+'</em>';
-	addItem(n,{holder:pB,data:c.enabled,title:c.name,onclick:function(){
-		loadItem(this,c.enabled=!c.enabled);rt.post('EnableStyle',{id:i,data:c.enabled});
+function menuStyle(c) {
+	var n=c.name?c.name.replace(/&/g,'&amp;').replace(/</g,'&lt;'):'<em>'+_('labelNoName')+'</em>';
+	n=addItem(n,{holder:pB,data:c.enabled,title:c.name,onclick:function(){
+		post({cmd:'EnableStyle',data:{id:c.id,data:!n.data}},function(o){
+			loadItem(n,!n.data);
+		});
 	}});
 }
-var cur=null,_title;
+var cur=null,_title,count=0;
 function alterStyle(i){
 	var d=addItem(i,{holder:cB,data:i==_title,title:true,onclick:function(){
 		if(cur) loadItem(cur,false);loadItem(cur=this,true);
@@ -41,49 +44,58 @@ function alterStyle(i){
 	}});
 	if(i==_title) cur=d;
 }
-var isApplied=getItem('isApplied');
 function getPopup(){
-	getPopup.flag++;	// avoid frequent asking for popup menu
+	count++;	// avoid frequent asking for popup menu
 	setTimeout(function(){
-		if(!--getPopup.flag) injectContent('setPopup();');
+		if(!--count) injectContent('setPopup();');
 	},200);
 }
-getPopup.flag=0;
-function load(o){
-	tab=o?o.source:null;
+function load(o,src,callback){
+	tab=src&&src.id;
 	pT.innerHTML=pB.innerHTML=cT.innerHTML=cB.innerHTML='';
-	addItem(_('Manage styles'),{holder:pT,symbol:'➤',title:true,onclick:function(){
+	addItem(_('menuManageStyles'),{holder:pT,symbol:'➤',title:true,onclick:function(){
 		br.tabs.newTab({url:rt.getPrivateUrl()+'options.html',activate:true});
 	}});
-	if(o) addItem(_('Find styles for this site'),{holder:pT,symbol:'➤',title:true,onclick:function(){
+	if(o) addItem(_('menuFindStyles'),{holder:pT,symbol:'➤',title:true,onclick:function(){
 		br.tabs.newTab({url:'http://userstyles.org/styles/search/'+encodeURIComponent(br.tabs.getCurrentTab().url),activate:true});
 	}});
-	var d=o&&o.data;
-	if(d&&d.astyles&&d.astyles.length) {
-		_title=d.cstyle||'';
-		addItem(_('Back'),{holder:cT,symbol:'◄',title:true,onclick:function(){
+	if(o&&o.astyles&&o.astyles.length) {
+		_title=o.cstyle||'';
+		addItem(_('menuBack'),{holder:cT,symbol:'◄',title:true,onclick:function(){
 			A.classList.add('hide');P.classList.remove('hide');
 		}});
-		d.astyles.forEach(alterStyle);
-		addItem(_('Alter stylesheet...'),{holder:pT,symbol:'➤',title:true,onclick:function(){
+		o.astyles.forEach(alterStyle);
+		addItem(_('menuAlterStylesheet'),{holder:pT,symbol:'➤',title:true,onclick:function(){
 			P.classList.add('hide');A.classList.remove('hide');
 		}});
 	}
-	addItem(_('Enable styles'),{holder:pT,data:isApplied,title:true,onclick:function(){
-		loadItem(this,setItem('isApplied',isApplied=!isApplied));
-		rt.icon.setIconImage('icon'+(isApplied?'':'w'));
+	var a=addItem(_('menuStylesEnabled'),{holder:pT,data:true,title:true,onclick:function(e){
+		post({cmd:'SetOption',data:{key:'isApplied',value:!a.data}},function(o){
+			loadItem(a,!a.data);rt.icon.setIconImage('icon'+(a.data?'':'w'));
+		});
 		broadcast('updateStyle();');
 	}});
-	if(d&&d.styles&&d.styles.length) {
+	post({cmd:'GetOption',data:'isApplied'},function(o){loadItem(a,o);});
+	if(o&&o.styles&&o.styles.length) {
 		pR.classList.remove('hide');
-		d.styles.forEach(menuStyle);
+		post({cmd:'GetMetas',data:o.styles},function(o){
+			o.forEach(menuStyle);
+		});
 	} else pR.classList.add('hide');
 	if(!o) getPopup();
 }
-initFont();
-load();
-rt.listen('GetPopup',getPopup);
-rt.listen('SetPopup',load);
+initCSS();
+rt.listen('Popup',function(o){
+	var maps={
+		GetPopup:getPopup,
+		SetPopup:load,
+	},f=maps[o.cmd];
+	function callback(d){
+		rt.post(o.src.id,{cmd:'Callback',data:{id:o.callback,data:d}});
+	}
+	if(f) f(o.data,o.src,callback);
+});
+var post=initMessage({});load();
 br.onBrowserEvent=function(o){
 	switch(o.type){
 		case 'TAB_SWITCH':
@@ -91,3 +103,4 @@ br.onBrowserEvent=function(o){
 			load();
 	}
 };
+})();

@@ -1,37 +1,45 @@
+(function(){
 var $=document.getElementById.bind(document),
 		N=$('main'),L=$('sList'),O=$('overlay');
 zip.workerScriptsPath='lib/zip.js/';
 function getDate(t){var d=new Date();d.setTime(t);return d.toLocaleDateString();}
 function getName(n){
-	return n.name?n.name.replace(/&/g,'&amp;').replace(/</g,'&lt;'):'<em>'+_('Null name')+'</em>';
+	return n.name?n.name.replace(/&/g,'&amp;').replace(/</g,'&lt;'):'<em>'+_('labelNoName')+'</em>';
 }
 
 // Main options
-function loadName(d,n){
-	var a=d.firstChild;
-	if(n.url) a.href=n.url;
-	a.title=n.name;
-	a.innerHTML=getName(n);
+function modifyItem(d,r){
+	if(r) {
+		if(r.message) d.querySelector('.message').innerHTML=r.message;
+		var u=d.querySelector('.update');
+		if(r.hideUpdate) u.classList.add('hide');
+		else u.classList.remove('hide');
+	}
 }
-function loadItem(d,n,r){
+function loadItem(o,r){
+	var d=o.div,n=o.obj;
 	d.innerHTML='<a class="name ellipsis" target=_blank></a>'
-	+'<span class=updated>'+(n.updated?_('Last updated: ')+getDate(n.updated):'')+'</span>'
-	+(n.metaUrl?'<a href=# data=update class=update>'+_('Check for updates')+'</a> ':'')
+	+'<span class=updated>'+(n.updated?_('labelLastUpdated')+getDate(n.updated):'')+'</span>'
+	+(n.metaUrl?'<a href=# data=update class=update>'+_('anchorUpdate')+'</a> ':'')
 	+'<span class=message></span>'
 	+'<div class=panel>'
-		+'<button data=edit>'+_('Edit')+'</button> '
-		+'<button data=enable>'+(n.enabled?_('Disable'):_('Enable'))+'</button> '
-		+'<button data=remove>'+_('Remove')+'</button>'
+		+'<button data=edit>'+_('buttonEdit')+'</button> '
+		+'<button data=enable>'+(n.enabled?_('buttonDisable'):_('buttonEnable'))+'</button> '
+		+'<button data=remove>'+_('buttonRemove')+'</button>'
 	+'</div>';
 	d.className=n.enabled?'':'disabled';
-	loadName(d,n);
-	if(r&&r.message) d.querySelector('.message').innerHTML=r.message;
+	setTimeout(function(){
+		var a=d.firstChild;
+		if(n.url) a.href=n.url;
+		a.title=n.name;
+		a.innerHTML=getName(n);
+		modifyItem(d,r);
+	},0);
 }
-function addItem(n){
-	var d=document.createElement('div');
-	loadItem(d,n);
-	L.appendChild(d);
-	return d;
+function addItem(o){
+	o.div=document.createElement('div');
+	loadItem(o);
+	L.appendChild(o.div);
 }
 L.onclick=function(e){
 	var o=e.target,d=o.getAttribute('data'),p;
@@ -41,34 +49,24 @@ L.onclick=function(e){
 	var i=Array.prototype.indexOf.call(L.childNodes,p);
 	switch(d){
 		case 'edit':
-			edit(i);
+			post({cmd:'GetStyle',data:ids[M.cur=i]},edit);
 			break;
 		case 'enable':
-			e=map[ids[i]];
-			if(e.enabled=!e.enabled) {
-				p.classList.remove('disabled');
-				o.innerText=_('Disable');
-			} else {
-				p.classList.add('disabled');
-				o.innerText=_('Enable');
-			}
-			rt.post('SaveStyle',e);
+			e=map[ids[i]].obj;
+			post({cmd:'EnableStyle',data:{id:e.id,data:!e.enabled}});
 			break;
 		case 'remove':
-			rt.post('RemoveStyle',i);
+			post({cmd:'RemoveStyle',data:i});
 			delete map[ids.splice(i,1)[0]];
 			L.removeChild(p);
 			break;
 		case 'update':
-			check(i);
+			post({cmd:'CheckUpdate',data:ids[i]});
 			break;
 	}
 };
-rt.listen('GotStyle',function(o){ids.push(o.id);o=addItem(map[o.id]=o);});
-$('bNew').onclick=function(){rt.post('NewStyle');};
-$('bUpdate').onclick=function(){
-	for(var i=0;i<ids.length;i++) if(map[ids[i]].metaUrl) check(i);
-};
+$('bNew').onclick=function(){post({cmd:'NewStyle'},edit);};
+$('bUpdate').onclick=function(){post({cmd:'CheckUpdateAll'});};
 var panel=N;
 function switchTo(D){
 	panel.classList.add('hide');D.classList.remove('hide');panel=D;
@@ -98,27 +96,25 @@ O.onclick=function(){
 	if(dialogs.length) (dialogs[dialogs.length-1].close||closeDialog)();
 };
 function confirmCancel(dirty){
-	return !dirty||confirm(_('Modifications are not saved!'));
+	return !dirty||confirm(_('confirmNotSaved'));
 }
-initFont();initI18n();
+initCSS();initI18n();
 
 // Advanced
-var A=$('advanced');
+var A=$('advanced'),H=$('iImport');
 $('bAdvanced').onclick=function(){showDialog(A);};
-$('cInstall').onchange=function(){rt.post('SetOption',{key:'installFile',data:this.checked});};
 $('aExport').onclick=function(){showDialog(X);xLoad();};
-function importFile(e){
+H.onchange=function(e){
 	zip.createReader(new zip.BlobReader(e.target.files[0]),function(r){
 		r.getEntries(function(e){
 			function getFiles(){
 				var i=e.shift();
 				if(i) i.getData(writer,function(t){
-					rt.post(/\.json$/.test(i.filename)?'ParseJSON':'ParseFirefoxCSS',
-						{data:t});
+					post({cmd:/\.json$/.test(i.filename)?'ParseJSON':'ParseFirefoxCSS',data:{code:t}});
 					count++;
 					getFiles();
 				}); else {
-					alert(format(_('$1 item(s) are imported.'),count));
+					alert(_('msgImported',[count]));
 					location.reload();
 				}
 			}
@@ -135,28 +131,28 @@ function importFile(e){
 			}); else getFiles();
 		});
 	});
-}
+};
 $('aImport').onclick=function(){
-	var e=document.createEvent('MouseEvent'),iH=document.createElement('input');
-	iH.setAttribute('type','file');iH.onchange=importFile;
+	var e=document.createEvent('MouseEvent');
 	e.initMouseEvent('click',true,true,window,0,0,0,0,0,false,false,false,false,0,null);
-	iH.dispatchEvent(e);
+	H.dispatchEvent(e);
 };
 A.close=$('aClose').onclick=closeDialog;
 
 // Export
 var X=$('export'),xL=$('xList'),xE=$('bExport'),xF=$('cFirefox');
 function xLoad() {
-	xL.innerHTML='';xE.disabled=false;xE.innerHTML=_('Export');
+	xL.innerHTML='';xE.disabled=false;xE.innerHTML=_('buttonExport');
 	ids.forEach(function(i){
 		var d=document.createElement('div');
 		d.className='ellipsis';
-		d.title=map[i].name;
-		d.innerHTML=getName(map[i]);
+		d.title=map[i].obj.name;
+		d.innerHTML=getName(map[i].obj);
 		xL.appendChild(d);
 	});
 }
-xF.onchange=function(){rt.post('SetOption',{key:'firefoxCSS',data:this.checked});};
+xF.parentNode.title=_('hintFirefoxCSS');
+xF.onchange=function(){post({cmd:'SetOption',data:{key:'firefoxCSS',value:this.checked}});};
 xL.onclick=function(e){
 	var t=e.target;
 	if(t.parentNode!=this) return;
@@ -171,11 +167,11 @@ $('bSelect').onclick=function(){
 X.close=$('bClose').onclick=closeDialog;
 xE.onclick=function(e){
 	e.preventDefault();
-	this.disabled=true;this.innerHTML=_('Exporting...');
+	this.disabled=true;this.innerHTML=_('buttonExporting');
 	var i,c=[];
 	for(i=0;i<ids.length;i++)
 		if(xL.childNodes[i].classList.contains('selected')) c.push(ids[i]);
-	rt.post('ExportZip',{data:c});
+	post({cmd:'ExportZip',data:c},exported);
 };
 function getFirefoxCSS(c){
 	var d=[];
@@ -192,7 +188,7 @@ function getFirefoxCSS(c){
 	});
 	return d.join('\n');
 }
-function exportStart(o){
+function exported(o){
 	function addFiles(){
 		if(!writer) {	// create writer
 			zip.createWriter(new zip.BlobWriter(),function(w){writer=w;addFiles();});
@@ -227,7 +223,7 @@ function exportStart(o){
 	}
 	var writer=null,files=[],adding=false,xH=$('xHelper'),
 			n,_n,names={},s={settings:o.settings};
-	o.data.forEach(function(c){
+	o.styles.forEach(function(c){
 		var j=0;
 		n=_n=c.name||'Noname';
 		while(names[n]) n=_n+'_'+(++j);names[n]=1;
@@ -237,63 +233,13 @@ function exportStart(o){
 	addFile({name:'Stylish',content:JSON.stringify(s)});
 	addFile({});	// finish adding files
 }
-rt.listen('ExportStart',exportStart);
-
-// Update checker
-function check(i){
-	var l=L.childNodes[i],c=map[ids[i]],o=l.querySelector('[data=update]'),m=l.querySelector('.message'),d;
-	m.innerHTML=_('Checking for updates...');
-	o.classList.add('hide');
-	function update(){
-		m.innerHTML=_('Updating...');
-		req=new window.XMLHttpRequest();
-		req.open('GET', c.updateUrl, true);
-		req.onload=function(){
-			rt.post('ParseCSS',{data:{status:req.status,id:c.id,updated:d,code:req.responseText}});
-			o.classList.remove('hide');
-		};
-		req.send();
-	}
-	var req=new window.XMLHttpRequest();
-	req.open('GET', c.metaUrl, true);
-	req.onload=function(){
-		try {
-			d=new Date(JSON.parse(this.responseText).updated).getTime();
-			if(!c.updated||c.updated<d) {
-				if(c.updateUrl) return update();
-				else m.innerHTML='<span class=new title="'+_('Please go to homepage for update since there are options for this style.')+'">'+_('New version found.')+'</span>';
-			} else m.innerHTML=_('No update found.');
-		} catch(e) {
-			m.innerHTML=_('Failed fetching update information.');
-			console.log(e);
-		}
-		o.classList.remove('hide');
-	};
-	req.send();
-}
 
 // Style Editor
 var M=$('editor'),S=$('mSection'),I=$('mName'),
     rD=$('mDomain'),rR=$('mRegexp'),rP=$('mUrlPrefix'),rU=$('mUrl'),
     eS=$('mSave'),eSC=$('mSaveClose'),T;
-function cloneData(d){
-	var c=[];
-	d.forEach(function(i){
-		if(i.code) c.push({
-			name:i.name,
-			domains:i.domains.concat(),
-			regexps:i.regexps.concat(),
-			urlPrefixes:i.urlPrefixes.concat(),
-			urls:i.urls.concat(),
-			code:i.code
-		});
-	});
-	return c;
-}
-function edit(i){
-	switchTo(M);
-	M.cur=i;M.css=map[ids[M.cur]];
-	M.data=cloneData(M.css.data);
+function edit(o){
+	switchTo(M);M.css=o;M.data=o.data;
 	S.innerHTML='';S.cur=0;S.dirty=false;
 	eS.disabled=eSC.disabled=true;
 	I.value=M.css.name;
@@ -325,8 +271,7 @@ function mSave(e){
 	M.css.name=I.value;
 	mSection();
 	eS.disabled=eSC.disabled=true;
-	M.css.data=e?cloneData(M.data):M.data;
-	rt.post('SaveStyle',M.css);
+	post({cmd:'SaveStyle',data:M.css});
 }
 function mShow(){
 	var c=S.childNodes[S.cur];S.dirty=true;
@@ -369,7 +314,7 @@ function addSection(){
 }
 function renameSection(t){
 	if(!t) return;
-	var o=prompt(format(_('Rename Section "$1" to:'),t.innerText));
+	var o=prompt(_('msgRename',[t.innerText]));
 	if(o!=null) {
 		M.data[S.cur].name=o;
 		t.innerText=o||S.cur+1;
@@ -400,20 +345,23 @@ function ruleBlur(e){e.target.parentNode.style.width='';}
 initEditor(function(o){T=o;},{onchange:S.markDirty});
 
 // Load at last
-var ids,map;
-function loadOptions(o){
-	ids=o.ids;map=o.map;L.innerHTML='';
-	ids.forEach(function(i){addItem(map[i]);});
-	$('cInstall').checked=o.installFile;
-	xF.checked=o.firefoxCSS;
-}
-rt.listen('GotOptions',function(o){loadOptions(o);});	// loadOptions can be rewrited
+var ids,map,post=initMessage({});
 rt.listen('UpdateItem',function(r){
-	if(!r.obj||!('item' in r)||r.item<0) return;
-	map[r.obj.id]=r.obj;
+	if(!r.id) return;
+	var m=map[r.id];
+	if(!m) map[r.id]=m={};
+	if(r.obj) m.obj=r.obj;
 	switch(r.status){
-		case 1:ids.push(r.obj.id);addItem(r.obj);break;
-		default:loadItem(L.childNodes[r.item],r.obj,r);
+		case 0:loadItem(m,r);break;
+		case 1:ids.push(r.id);addItem(m);break;
+		default:modifyItem(m.div,r);
 	}
 });
-rt.post('GetOptions');
+post({cmd:'GetData'},function(o){
+	L.innerHTML='';ids=[];map={};
+	o.styles.forEach(function(i){
+		ids.push(i.id);addItem(map[i.id]={obj:i});
+	});
+	xF.checked=o.settings.firefoxCSS;
+});
+})();

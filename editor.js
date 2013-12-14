@@ -1,22 +1,4 @@
-/*function initAce(callback,data){
-	data=data||{};
-	addScript({src:'lib/ace-min-noconflict/ace.js'},function(){
-		var T=ace.edit('mCode'),s=T.getSession();
-		T.setValueAndFocus=function(v){
-			T.setValue(v);T.focus();T.gotoLine(0,0);
-		};
-		s.setMode('ace/mode/css');
-		s.setUseSoftTabs(false);
-		s.setUseWrapMode(true);
-		s.setUseWorker(true);
-		T.clearHistory=s.getUndoManager().reset;
-		if(data.onchange) s.on('change',data.onchange);
-		if(data.readonly) T.setReadOnly(data.readonly);
-		callback(T);
-	});
-}*/
-
-function initCodeMirror(callback,data){
+function initEditor(callback,data){
 	data=data||{};
 	addCSS([
 		{href:'lib/CodeMirror/lib/codemirror.css'},
@@ -38,7 +20,7 @@ function initCodeMirror(callback,data){
 			{src:'lib/CodeMirror/addon/selection/active-line.js'},
 			{src:'mylib/CodeMirror/search.js'},
 		],function(){
-			var T=CodeMirror($('mCode'),{
+			var T=CodeMirror(document.getElementById('mCode'),{
 				continueComments:true,
 				matchBrackets:true,
 				autoCloseBrackets:true,
@@ -62,5 +44,3 @@ function initCodeMirror(callback,data){
 		});
 	});
 }
-
-var initEditor=initCodeMirror;
