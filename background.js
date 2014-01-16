@@ -463,6 +463,7 @@ function initSettings(){
 		if(!getOption(k)) setOption({key:k,value:v});
 	}
 	init('isApplied',true);
+	init('startReload',true);
 	init('firefoxCSS',false);
 }
 function reinit(){
@@ -532,7 +533,7 @@ initDatabase(function(){
 				return true;
 			});
 			rt.icon.setIconImage('icon'+(settings.isApplied?'':'w'));
-			reinit();
+			if(settings.startReload) reinit();
 		});
 	});
 });

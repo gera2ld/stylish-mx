@@ -102,6 +102,7 @@ initCSS();initI18n();
 
 // Advanced
 var A=$('advanced'),H=$('iImport');
+$('cReload').onchange=function(){post({cmd:'SetOption',data:{key:'startReload',value:this.checked}});};
 $('bAdvanced').onclick=function(){showDialog(A);};
 $('aExport').onclick=function(){showDialog(X);xLoad();};
 H.onchange=function(e){
@@ -362,6 +363,7 @@ post({cmd:'GetData'},function(o){
 	o.styles.forEach(function(i){
 		ids.push(i.id);addItem(map[i.id]={obj:i});
 	});
+	$('cReload').checked=o.settings.startReload;
 	xF.checked=o.settings.firefoxCSS;
 });
 })();
