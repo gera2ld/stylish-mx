@@ -40,6 +40,8 @@ function older(a,b,c,d){
  * }
  */
 function dbError(t,e){
+	var n=window.webkitNotifications.createNotification('','Error - Violentmonkey','Database error >>> '+e.message);
+	n.show();
 	console.log('Database error: '+e.message);
 }
 function initDatabase(callback){
@@ -415,13 +417,13 @@ function checkUpdateO(o){
 			r.message=_('msgErrorFetchingUpdateInfo');
 			delete r.hideUpdate;
 			if(this.status==200) try{
-				d=new Date(JSON.parse(this.responseText).updated).getTime();
+				var d=new Date(JSON.parse(this.responseText).updated).getTime();
 				if(!o.updated||o.updated<d) {
 					if(o.updateUrl) {
 						r.message=_('msgUpdating');
 						r.hideUpdate=1;
 						fetchURL(o.updateUrl,function(){
-							parseCSS({status:this.status,id:c.id,updated:d,code:this.responseText});
+							parseCSS({status:this.status,id:o.id,updated:d,code:this.responseText});
 						});
 					} else r.message='<span class=new>'+_('msgNewVersion')+'</span>';
 				} else r.message=_('msgNoUpdate');
