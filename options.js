@@ -287,9 +287,7 @@ function mShow(){
 	T.clearHistory();S.dirty=false;
 }
 function mClose(){
-	switchTo(N);
-	loadName(L.childNodes[M.cur],map[ids[M.cur]]);
-	M.cur=M.css=null;
+	switchTo(N);M.cur=M.css=null;
 }
 function bindChange(e,f){e.forEach(function(i){i.onchange=f;});}
 M.markDirty=function(){eS.disabled=eSC.disabled=false;};
