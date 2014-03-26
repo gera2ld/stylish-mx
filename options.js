@@ -11,9 +11,8 @@ function getName(n){
 function modifyItem(d,r){
 	if(r) {
 		if(r.message) d.querySelector('.message').innerHTML=r.message;
-		var u=d.querySelector('.update');
-		if(r.hideUpdate) u.classList.add('hide');
-		else u.classList.remove('hide');
+		d=d.querySelector('.update');
+		if(d) d.classList[r.hideUpdate?'add':'remove']('hide');
 	}
 }
 function loadItem(o,r){
@@ -49,7 +48,7 @@ L.onclick=function(e){
 	var i=Array.prototype.indexOf.call(L.childNodes,p);
 	switch(d){
 		case 'edit':
-			post({cmd:'GetStyle',data:ids[M.cur=i]},edit);
+			post({cmd:'GetStyle',data:ids[i]},edit);
 			break;
 		case 'enable':
 			e=map[ids[i]].obj;
@@ -286,9 +285,7 @@ function mShow(){
 	} else T.setValueAndFocus(rD.value=rR.value=rP.value=rU.value='');
 	T.clearHistory();S.dirty=false;
 }
-function mClose(){
-	switchTo(N);M.cur=M.css=null;
-}
+function mClose(){switchTo(N);M.css=null;}
 function bindChange(e,f){e.forEach(function(i){i.onchange=f;});}
 M.markDirty=function(){eS.disabled=eSC.disabled=false;};
 S.markDirty=function(){if(S.dirty) return;S.dirty=true;M.markDirty();};
@@ -352,7 +349,7 @@ rt.listen('UpdateItem',function(r){
 	if(r.obj) m.obj=r.obj;
 	switch(r.status){
 		case 0:loadItem(m,r);break;
-		case 1:ids.push(r.id);addItem(m);break;
+		case 1:ids.push(r.id);addItem(m);if(M.css&&!M.css.id) M.css.id=r.id;break;
 		default:modifyItem(m.div,r);
 	}
 });
