@@ -226,10 +226,11 @@ function edit(o){
 	M.css=o;M.data=o.data;
 	S.innerHTML='';S.cur=0;S.dirty=false;
 	eS.disabled=eSC.disabled=true;
-	I.value=M.css.name;
-	if(M.data.length) for(var i=0;i<M.data.length;i++) mAddItem(M.data[i].name);
-	else addSection();
-	mShow();
+	I.value=o.name;
+	if(M.data.length) {
+		for(var i=0;i<M.data.length;i++) mAddItem(M.data[i].name);
+		mShow();
+	} else addSection();
 }
 function mAddItem(n){
 	var d=document.createElement('div');
@@ -251,7 +252,7 @@ function mSection(r){
 		if(r) S.childNodes[S.cur].classList.remove('selected');
 	}
 }
-function mSave(e){
+function mSave(){
 	M.css.name=I.value;
 	mSection();
 	eS.disabled=eSC.disabled=true;
