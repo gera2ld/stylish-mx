@@ -1,7 +1,7 @@
 (function(){
-var $=document.getElementById.bind(document),
-		N=$('main'),L=$('sList'),O=$('overlay');
+var $=document.querySelector.bind(document),L=$('#sList'),cur=null,C=$('.content');
 zip.workerScriptsPath='lib/zip.js/';
+initI18n();
 function getDate(t){var d=new Date();d.setTime(t);return d.toLocaleDateString();}
 function getName(n){
 	return n.name?n.name.replace(/&/g,'&amp;').replace(/</g,'&lt;'):'<em>'+_('labelNoName')+'</em>';
@@ -17,18 +17,18 @@ function modifyItem(d,r){
 }
 function loadItem(o,r){
 	var d=o.div,n=o.obj;
-	d.innerHTML='<a class="name ellipsis" target=_blank></a>'
-	+'<span class=updated>'+(n.updated?_('labelLastUpdated')+getDate(n.updated):'')+'</span>'
-	+(n.metaUrl?'<a href=# data=update class=update>'+_('anchorUpdate')+'</a> ':'')
-	+'<span class=message></span>'
+	d.innerHTML='<h3><a class="name ellipsis" target=_blank></a></h3>'
+	+'<span class=updated>'+(n.updated?_('labelLastUpdated')+getDate(n.updated):'')+'</span><br>'
 	+'<div class=panel>'
 		+'<button data=edit>'+_('buttonEdit')+'</button> '
 		+'<button data=enable>'+(n.enabled?_('buttonDisable'):_('buttonEnable'))+'</button> '
-		+'<button data=remove>'+_('buttonRemove')+'</button>'
+		+'<button data=remove>'+_('buttonRemove')+'</button> '
+		+(n.metaUrl?'<button data=update class=update>'+_('anchorUpdate')+'</button> ':'')
+		+'<span class=message></span>'
 	+'</div>';
 	d.className=n.enabled?'':'disabled';
 	setTimeout(function(){
-		var a=d.firstChild;
+		var a=d.querySelector('.name');if(!a) return;
 		if(n.url) a.href=n.url;
 		a.title=n.name;
 		a.innerHTML=getName(n);
@@ -64,46 +64,32 @@ L.onclick=function(e){
 			break;
 	}
 };
-$('bNew').onclick=function(){post({cmd:'NewStyle'},edit);};
-$('bUpdate').onclick=function(){post({cmd:'CheckUpdateAll'});};
-var panel=N;
-function switchTo(D){
-	panel.classList.add('hide');D.classList.remove('hide');panel=D;
-}
-var dialogs=[];
-function showDialog(D,z){
-	if(!dialogs.length) {
-		O.classList.remove('hide');
-		setTimeout(function(){O.classList.add('overlay');},1);
+$('#bNew').onclick=function(){post({cmd:'NewStyle'},edit);};
+$('#bUpdate').onclick=function(){post({cmd:'CheckUpdateAll'});};
+function switchTab(e){
+	var t=e.target,i=t.id.slice(2),o=C.querySelector('#tab'+i);
+	if(!o) return;
+	if(cur) {
+		if(cur.tab==o) return;
+		cur.menu.classList.remove('selected');
+		cur.tab.classList.add('hide');
 	}
-	if(!z) z=dialogs.length?dialogs[dialogs.length-1].zIndex+1:1;
-	dialogs.push(D);
-	O.style.zIndex=D.style.zIndex=D.zIndex=z;
-	D.classList.remove('hide');
-	D.style.top=(window.innerHeight-D.offsetHeight)/2+'px';
-	D.style.left=(window.innerWidth-D.offsetWidth)/2+'px';
-}
-function closeDialog(){
-	dialogs.pop().classList.add('hide');
-	if(dialogs.length) O.style.zIndex=dialogs.length>1?dialogs[dialogs.length-1]:1;
-	else {
-		O.classList.remove('overlay');
-		setTimeout(function(){O.classList.add('hide');},500);
+	cur={menu:t,tab:o};
+	t.classList.add('selected');
+	o.classList.remove('hide');
+	switch(i) {	// init
+		case 'Settings':xLoad();break;
 	}
 }
-O.onclick=function(){
-	if(dialogs.length) (dialogs[dialogs.length-1].close||closeDialog)();
-};
+$('.sidemenu').onclick=switchTab;
+switchTab({target:$('#smInstalled')});
 function confirmCancel(dirty){
 	return !dirty||confirm(_('confirmNotSaved'));
 }
-initCSS();initI18n();
 
 // Advanced
-var A=$('advanced'),H=$('iImport');
-$('cReload').onchange=function(){post({cmd:'SetOption',data:{key:'startReload',value:this.checked}});};
-$('bAdvanced').onclick=function(){showDialog(A);};
-$('aExport').onclick=function(){showDialog(X);xLoad();};
+var H=$('#iImport');
+$('#cReload').onchange=function(){post({cmd:'SetOption',data:{key:'startReload',value:this.checked}});};
 H.onchange=function(e){
 	zip.createReader(new zip.BlobReader(e.target.files[0]),function(r){
 		r.getEntries(function(e){
@@ -132,17 +118,16 @@ H.onchange=function(e){
 		});
 	});
 };
-$('aImport').onclick=function(){
+$('#bImport').onclick=function(){
 	var e=document.createEvent('MouseEvent');
 	e.initMouseEvent('click',true,true,window,0,0,0,0,0,false,false,false,false,0,null);
 	H.dispatchEvent(e);
 };
-A.close=$('aClose').onclick=closeDialog;
 
 // Export
-var X=$('export'),xL=$('xList'),xE=$('bExport'),xF=$('cFirefox');
+var xL=$('#xList'),xE=$('#bExport'),xF=$('#cFirefox');
 function xLoad() {
-	xL.innerHTML='';xE.disabled=false;xE.innerHTML=_('buttonExport');
+	xL.innerHTML='';xE.disabled=false;
 	ids.forEach(function(i){
 		var d=document.createElement('div');
 		d.className='ellipsis';
@@ -158,16 +143,15 @@ xL.onclick=function(e){
 	if(t.parentNode!=this) return;
 	t.classList.toggle('selected');
 };
-$('bSelect').onclick=function(){
+$('#bSelect').onclick=function(){
 	var c=xL.childNodes,v,i;
 	for(i=0;i<c.length;i++) if(!c[i].classList.contains('selected')) break;
 	v=i<c.length;
 	for(i=0;i<c.length;i++) if(v) c[i].classList.add('selected'); else c[i].classList.remove('selected');
 };
-X.close=$('bClose').onclick=closeDialog;
 xE.onclick=function(e){
 	e.preventDefault();
-	this.disabled=true;this.innerHTML=_('buttonExporting');
+	this.disabled=true;
 	var i,c=[];
 	for(i=0;i<ids.length;i++)
 		if(xL.childNodes[i].classList.contains('selected')) c.push(ids[i]);
@@ -211,7 +195,6 @@ function exported(o){
 					URL.revokeObjectURL(u);
 					xH.removeAttribute('href');
 					xH.removeAttribute('download');
-					X.close();
 				});
 			}
 		}
@@ -221,7 +204,7 @@ function exported(o){
 		files.push(o);
 		if(!adding) addFiles();
 	}
-	var writer=null,files=[],adding=false,xH=$('xHelper'),
+	var writer=null,files=[],adding=false,xH=$('#xHelper'),
 			n,_n,names={},s={settings:o.settings};
 	o.styles.forEach(function(c){
 		var j=0;
@@ -235,11 +218,12 @@ function exported(o){
 }
 
 // Style Editor
-var M=$('editor'),S=$('mSection'),I=$('mName'),
-    rD=$('mDomain'),rR=$('mRegexp'),rP=$('mUrlPrefix'),rU=$('mUrl'),
-    eS=$('mSave'),eSC=$('mSaveClose'),T;
+var M=$('#wndEditor'),S=$('#mSection'),I=$('#mName'),
+    rD=$('#mDomain'),rR=$('#mRegexp'),rP=$('#mUrlPrefix'),rU=$('#mUrl'),
+    eS=$('#mSave'),eSC=$('#mSaveClose'),T;
 function edit(o){
-	switchTo(M);M.css=o;M.data=o.data;
+	M.classList.remove('hide');
+	M.css=o;M.data=o.data;
 	S.innerHTML='';S.cur=0;S.dirty=false;
 	eS.disabled=eSC.disabled=true;
 	I.value=M.css.name;
@@ -285,7 +269,7 @@ function mShow(){
 	} else T.setValueAndFocus(rD.value=rR.value=rP.value=rU.value='');
 	T.clearHistory();S.dirty=false;
 }
-function mClose(){switchTo(N);M.css=null;}
+function mClose(){M.classList.add('hide');M.css=null;}
 function bindChange(e,f){e.forEach(function(i){i.onchange=f;});}
 M.markDirty=function(){eS.disabled=eSC.disabled=false;};
 S.markDirty=function(){if(S.dirty) return;S.dirty=true;M.markDirty();};
@@ -317,8 +301,8 @@ function renameSection(t){
 		M.markDirty();
 	}
 }
-$('mNew').onclick=addSection;
-$('mDel').onclick=function(){
+$('#mNew').onclick=addSection;
+$('#mDel').onclick=function(){
 	if(M.data.length>1) {
 		M.data.splice(S.cur,1);
 		S.removeChild(S.lastChild);
@@ -329,12 +313,12 @@ $('mDel').onclick=function(){
 		M.markDirty();mShow();
 	}
 };
-$('mRen').onclick=function(){
+$('#mRen').onclick=function(){
 	renameSection(S.childNodes[S.cur]);
 };
 eS.onclick=mSave;
 eSC.onclick=function(){mSave();mClose();};
-M.close=$('mClose').onclick=function(){if(confirmCancel(!eS.disabled)) mClose();};
+M.close=$('#mClose').onclick=function(){if(confirmCancel(!eS.disabled)) mClose();};
 function ruleFocus(e){e.target.parentNode.style.width='50%';}
 function ruleBlur(e){e.target.parentNode.style.width='';}
 [rD,rR,rP,rU].forEach(function(i){i.onfocus=ruleFocus;i.onblur=ruleBlur;});
@@ -358,7 +342,7 @@ post({cmd:'GetData'},function(o){
 	o.styles.forEach(function(i){
 		ids.push(i.id);addItem(map[i.id]={obj:i});
 	});
-	$('cReload').checked=o.settings.startReload;
+	$('#cReload').checked=o.settings.startReload;
 	xF.checked=o.settings.firefoxCSS;
 });
 })();
