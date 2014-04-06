@@ -142,7 +142,7 @@ function enableStyle(o,src,callback){
 					if(r.rows.length) for(i=0;i<r.rows.length;i++) d.push(getSection(r.rows.item(i)));
 				});
 				broadcast('updateStyle('+o.id+','+(s.enabled?1:-1)+')');
-				updateItem({id:o.id,status:0});
+				updateItem({id:o.id,status:2});
 				if(callback) callback();
 			}
 		},dbError);

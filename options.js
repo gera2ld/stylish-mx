@@ -8,32 +8,31 @@ function getName(n){
 }
 
 // Main options
-function modifyItem(d,r){
-	if(r) {
-		if(r.message) d.querySelector('.message').innerHTML=r.message;
-		d=d.querySelector('.update');
-		if(d) d.classList[r.hideUpdate?'add':'remove']('hide');
-	}
+function modifyItem(r){
+	var o=map[r.id],d=o.div,n=o.obj;
+	if(r.message) d.querySelector('.message').innerHTML=r.message;
+	d.className=n.enabled?'':'disabled';
+	var a=d.querySelector('.update');
+	if(a) a.classList[r.hideUpdate?'add':'remove']('hide');
+	a=d.querySelector('.name');
+	if(n.url) a.href=n.url;
+	a.title=n.name;
+	a.innerHTML=getName(n);
+	a=d.querySelector('.enable');
+	a.innerHTML=n.enabled?_('buttonDisable'):_('buttonEnable');
 }
 function loadItem(o,r){
-	var d=o.div,n=o.obj;
+	var d=o.div,n=o.obj;if(!r) r={id:n.id};
 	d.innerHTML='<h3><a class="name ellipsis" target=_blank></a></h3>'
 	+'<span class=updated>'+(n.updated?_('labelLastUpdated')+getDate(n.updated):'')+'</span><br>'
 	+'<div class=panel>'
 		+'<button data=edit>'+_('buttonEdit')+'</button> '
-		+'<button data=enable>'+(n.enabled?_('buttonDisable'):_('buttonEnable'))+'</button> '
+		+'<button data=enable class=enable></button> '
 		+'<button data=remove>'+_('buttonRemove')+'</button> '
 		+(n.metaUrl?'<button data=update class=update>'+_('anchorUpdate')+'</button> ':'')
 		+'<span class=message></span>'
 	+'</div>';
-	d.className=n.enabled?'':'disabled';
-	setTimeout(function(){
-		var a=d.querySelector('.name');if(!a) return;
-		if(n.url) a.href=n.url;
-		a.title=n.name;
-		a.innerHTML=getName(n);
-		modifyItem(d,r);
-	},0);
+	setTimeout(function(){modifyItem(r);},0);
 }
 function addItem(o){
 	o.div=document.createElement('div');
@@ -335,7 +334,7 @@ rt.listen('UpdateItem',function(r){
 	switch(r.status){
 		case 0:loadItem(m,r);break;
 		case 1:ids.push(r.id);addItem(m);if(M.css&&!M.css.id) M.css.id=r.id;break;
-		default:modifyItem(m.div,r);
+		default:modifyItem(r);
 	}
 });
 post({cmd:'GetData'},function(o){
