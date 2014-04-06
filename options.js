@@ -3,8 +3,9 @@ var $=document.querySelector.bind(document),L=$('#sList'),cur=null,C=$('.content
 zip.workerScriptsPath='lib/zip.js/';
 initI18n();
 function getDate(t){var d=new Date();d.setTime(t);return d.toLocaleDateString();}
-function getName(n){
-	return n.name?n.name.replace(/&/g,'&amp;').replace(/</g,'&lt;'):'<em>'+_('labelNoName')+'</em>';
+function getName(d,n){
+	d.title=n||'';
+	d.innerHTML=n?n.replace(/&/g,'&amp;').replace(/</g,'&lt;'):'<em>'+_('labelNoName')+'</em>';
 }
 
 // Main options
@@ -13,17 +14,16 @@ function modifyItem(r){
 	if(r.message) d.querySelector('.message').innerHTML=r.message;
 	d.className=n.enabled?'':'disabled';
 	var a=d.querySelector('.update');
-	if(a) a.classList[r.hideUpdate?'add':'remove']('hide');
+	if(a) a.disabled=r.updating;
 	a=d.querySelector('.name');
 	if(n.url) a.href=n.url;
-	a.title=n.name;
-	a.innerHTML=getName(n);
+	getName(a,n.name);
 	a=d.querySelector('.enable');
 	a.innerHTML=n.enabled?_('buttonDisable'):_('buttonEnable');
 }
 function loadItem(o,r){
 	var d=o.div,n=o.obj;if(!r) r={id:n.id};
-	d.innerHTML='<h3><a class="name ellipsis" target=_blank></a></h3>'
+	d.innerHTML='<a class="name ellipsis" target=_blank></a>'
 	+'<span class=updated>'+(n.updated?_('labelLastUpdated')+getDate(n.updated):'')+'</span><br>'
 	+'<div class=panel>'
 		+'<button data=edit>'+_('buttonEdit')+'</button> '
@@ -130,8 +130,7 @@ function xLoad() {
 	ids.forEach(function(i){
 		var d=document.createElement('div');
 		d.className='ellipsis';
-		d.title=map[i].obj.name;
-		d.innerHTML=getName(map[i].obj);
+		getName(d,map[i].obj.name);
 		xL.appendChild(d);
 	});
 }
@@ -150,7 +149,7 @@ $('#bSelect').onclick=function(){
 };
 xE.onclick=function(e){
 	e.preventDefault();
-	this.disabled=true;
+	xE.disabled=true;
 	var i,c=[];
 	for(i=0;i<ids.length;i++)
 		if(xL.childNodes[i].classList.contains('selected')) c.push(ids[i]);
@@ -194,6 +193,7 @@ function exported(o){
 					URL.revokeObjectURL(u);
 					xH.removeAttribute('href');
 					xH.removeAttribute('download');
+					xE.disabled=false;
 				});
 			}
 		}
