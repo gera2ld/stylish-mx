@@ -66,22 +66,28 @@ L.onclick=function(e){
 $('#bNew').onclick=function(){post({cmd:'NewStyle'},edit);};
 $('#bUpdate').onclick=function(){post({cmd:'CheckUpdateAll'});};
 function switchTab(e){
-	var t=e.target,i=t.id.slice(2),o=C.querySelector('#tab'+i);
-	if(!o) return;
+	var h,o;
+	if(e) {
+		e=e.target;h=e.getAttribute('href').substr(1);
+	} else {
+		h=location.hash||'#Installed';
+		h=h.substr(1);
+		e=$('#sm'+h);
+	}
+	o=C.querySelector('#tab'+h);
+	if(!o) return switchTab({target:$('#smInstalled')});
 	if(cur) {
-		if(cur.tab==o) return;
 		cur.menu.classList.remove('selected');
 		cur.tab.classList.add('hide');
 	}
-	cur={menu:t,tab:o};
-	t.classList.add('selected');
+	cur={menu:e,tab:o};
+	e.classList.add('selected');
 	o.classList.remove('hide');
-	switch(i) {	// init
+	switch(h) {	// init
 		case 'Settings':xLoad();break;
 	}
 }
 $('.sidemenu').onclick=switchTab;
-switchTab({target:$('#smInstalled')});
 function confirmCancel(dirty){
 	return !dirty||confirm(_('confirmNotSaved'));
 }
@@ -129,7 +135,7 @@ function xLoad() {
 	xL.innerHTML='';xE.disabled=false;
 	ids.forEach(function(i){
 		var d=document.createElement('div');
-		d.className='ellipsis';
+		d.className='ellipsis selected';
 		getName(d,map[i].obj.name);
 		xL.appendChild(d);
 	});
@@ -344,5 +350,7 @@ post({cmd:'GetData'},function(o){
 	});
 	$('#cReload').checked=o.settings.startReload;
 	xF.checked=o.settings.firefoxCSS;
+	switchTab();
 });
+switchTab();
 })();

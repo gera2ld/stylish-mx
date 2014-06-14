@@ -1,9 +1,10 @@
 (function(){
+var location=window.location;
 // Messages
 var rt=window.external.mxGetRuntime(),id=Date.now()+Math.random().toString().slice(1),
 		callbacks={},B='Background',P='Popup';
 function post(d,o,callback){
-	o.src={id:id,url:window.location.href};
+	o.src={id:id,url:location.href};
 	if(callback) {
 		o.callback=Math.random().toString();
 		callbacks[o.callback]=callback;
@@ -147,19 +148,19 @@ function fixMaxthon(){
 	document.addEventListener('stylishInstallChrome',install,false);
 	document.addEventListener('stylishUpdateChrome',update,false);
 }
-if(/\.user\.css$|\.json$/.test(window.location.href)) {
+if(/\.user\.css$|\.json$/.test(location.href)) {
 	function rawInstall(){
 		function installed(o){showMessage(o.message);}
 		if(document&&document.body&&!document.querySelector('title')) post(B,{cmd:'InstallStyle'},function(o){
 			if(o&&confirm(o)) {
 				o=document.body.innerText;
-				if(/\.json$/.test(window.location.href)) post(B,{cmd:'ParseJSON',data:{code:o}},installed);
+				if(/\.json$/.test(location.href)) post(B,{cmd:'ParseJSON',data:{code:o}},installed);
 				else post(B,{cmd:'ParseFirefoxCSS',data:o},installed);
 			}
 		});
 	}
 	if(document.readyState!='complete') window.addEventListener('load',rawInstall,false);
 	else rawInstall();
-} else if(/^http:\/\/userstyles\.org\/styles\//.test(window.location.href))
+} else if(location.host=='userstyles.org'&&location.pathname.substr(0,8)=='/styles/')
 	window.addEventListener('DOMContentLoaded',fixMaxthon,false);
 })();
