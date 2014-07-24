@@ -41,42 +41,37 @@ function showMessage(data){
 }
 window.updateStyle=function(id,o){	// o==-1 for disabled, 0 for removed, 1 for enabled
 	if(o>0||!id) post(B,{cmd:'LoadStyle',data:id},loadStyle);
-	else {var d={};d[id]=o?'':false;loadStyle({styles:d});}
+	else loadStyle({styles:[[id,o?'':false]]});
 };
 window.setPopup=function(){
 	post(P,{cmd:'SetPopup',data:{
-		styles:_styles,
+		styles:styles.map(function(o){return o[0];}),
 		astyles:Object.getOwnPropertyNames(astyles),
 		cstyle:cur
 	}});
 };
 
 // CSS applying
-var isApplied=true,style=null,styles={},_styles=[],fstyles={};
-function styleAdd(i){
-	if(!(i in fstyles)) {fstyles[i]=0;_styles.push(i);}fstyles[i]++;
-}
-function styleRemove(i){
-	if((i in fstyles)&&!--fstyles[i]) _styles.splice(_styles.indexOf(i),1);
-}
+var isApplied=true,style=null,styles=[];
 function loadStyle(o){
+	console.log(o.styles);
 	var i,c;
 	if('isApplied' in o) isApplied=o.isApplied;
-	if(o.styles) {
-		for(i in o.styles) {
-			if(typeof o.styles[i]=='string') {styles[i]=o.styles[i];styleAdd(i);}
-			else {delete styles[i];styleRemove(i);}
-		}
-	}
+	if(o.styles) o.styles.forEach(function(o){
+		var i;
+		for(i=0;i<styles.length;i++) if(styles[i][0]==o[0]) break;
+		if(typeof o[1]=='string') {	// update
+			if(i<styles.length) styles[i][1]=o[1];
+			else styles.push(o);
+		} else	// remove
+			if(i<styles.length) styles.splice(i,1);
+	});
 	if(isApplied) {
 		if(!style) {
 			style=document.createElement('style');
 			document.documentElement.appendChild(style);
 		}
-		if(styles) {
-			c=[];for(i in styles) c.push(styles[i]);
-			style.innerHTML=c.join('');
-		}
+		style.innerHTML=styles.map(function(o){return o[1];}).join('\n');
 	} else if(style) {
 		document.documentElement.removeChild(style);
 		style=null;
@@ -102,21 +97,28 @@ window.addEventListener('DOMContentLoaded',function(){
 },false);
 
 // Stylish fix
-var data=null,ping=null;
+var data=null;
 function fixMaxthon(){
 	function getData(k){
 		var s=document.querySelector('link[rel='+k+']');
 		if(s) return s.getAttribute('href');
 	}
-	var url=getData('stylish-id-url'),metaUrl=url+'.json',req=new window.XMLHttpRequest();
-	req.open('GET',metaUrl,true);
+	data={
+		// id:null,
+		url:getData('canonical'),
+		idUrl:getData('stylish-id-url'),
+		md5Url:getData('stylish-md5-url'),
+		// md5:null,
+		// updateUrl:null,
+	};
+
+	var req=new window.XMLHttpRequest();
+	req.open('GET',data.md5Url,true);
 	req.onloadend=function(){
-		if(this.status==200) try{
-			data.updated=new Date(JSON.parse(req.responseText).updated).getTime();
-		} catch(e) {}
-		post(B,{cmd:'CheckStyle',data:url},function(o){
+		data.md5=this.responseText;
+		if(this.status==200) post(B,{cmd:'CheckStyle',data:data.idUrl},function(o){
 			if(o){
-				if(!o.updated||o.updated<data.updated) fireEvent('styleCanBeUpdatedChrome');
+				if(o.md5!=data.md5) fireEvent('styleCanBeUpdatedChrome');
 				else fireEvent('styleAlreadyInstalledChrome');
 				data.id=o.id;
 			} else fireEvent('styleCanBeInstalledChrome');
@@ -124,10 +126,6 @@ function fixMaxthon(){
 	};
 	req.send();
 
-	data={
-		url:url,
-		metaUrl:metaUrl,
-	};
 	function update(){
 		data.updateUrl=getData('stylish-code-chrome');
 		post(B,{cmd:'InstallStyle'},function(o){
@@ -138,24 +136,22 @@ function fixMaxthon(){
 		});
 	}
 	function install(){
-		ping=function(){
-			var req=new window.XMLHttpRequest();
-			req.open('GET', getData('stylish-install-ping-url-chrome'), true);
-			req.send();
-		};
+		var req=new window.XMLHttpRequest();
+		req.open('GET', getData('stylish-install-ping-url-chrome'), true);
+		req.send();
 		update();
 	}
 	document.addEventListener('stylishInstallChrome',install,false);
 	document.addEventListener('stylishUpdateChrome',update,false);
 }
-if(/\.user\.css$|\.json$/.test(location.href)) {
+if(/\.user\.css$|\.css\.json$/.test(location.href)) {
 	function rawInstall(){
 		function installed(o){showMessage(o.message);}
 		if(document&&document.body&&!document.querySelector('title')) post(B,{cmd:'InstallStyle'},function(o){
 			if(o&&confirm(o)) {
 				o=document.body.innerText;
 				if(/\.json$/.test(location.href)) post(B,{cmd:'ParseJSON',data:{code:o}},installed);
-				else post(B,{cmd:'ParseFirefoxCSS',data:o},installed);
+				else post(B,{cmd:'ParseFirefoxCSS',data:{code:o}},installed);
 			}
 		});
 	}

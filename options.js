@@ -29,7 +29,7 @@ function loadItem(o,r){
 		+'<button data=edit>'+_('buttonEdit')+'</button> '
 		+'<button data=enable class=enable></button> '
 		+'<button data=remove>'+_('buttonRemove')+'</button> '
-		+(n.metaUrl?'<button data=update class=update>'+_('anchorUpdate')+'</button> ':'')
+		+(n.md5Url?'<button data=update class=update>'+_('buttonUpdate')+'</button> ':'')
 		+'<span class=message></span>'
 	+'</div>';
 	setTimeout(function(){modifyItem(r);},0);
@@ -54,7 +54,7 @@ L.onclick=function(e){
 			post({cmd:'EnableStyle',data:{id:e.id,data:!e.enabled}});
 			break;
 		case 'remove':
-			post({cmd:'RemoveStyle',data:i});
+			post({cmd:'RemoveStyle',data:ids[i]});
 			delete map[ids.splice(i,1)[0]];
 			L.removeChild(p);
 			break;
@@ -163,9 +163,14 @@ xE.onclick=function(e){
 };
 function getFirefoxCSS(c){
 	var d=[];
-	['id','name','url','metaUrl','updateUrl','updated','enabled'].forEach(function(i){
-		if(c[i]!=undefined) d.push('/* @'+i+' '+String(c[i]).replace(/\*/g,'+')+' */');
+	allowedProps.forEach(function(i){
+		if(c[i]!=undefined) d.push('@'+i+' '+String(c[i]).replace(/\*/g,'+'));
 	});
+	if(d.length) {
+		d.unshift('/* ==UserCSS==');
+		d.push('==/UserCSS== */');
+		d=[d.join('\n')];
+	}
 	c.data.forEach(function(i){
 		var p=[];
 		i.domains.forEach(function(j){p.push('domain('+JSON.stringify(j)+')');});
@@ -213,10 +218,10 @@ function exported(o){
 			n,_n,names={},s={settings:o.settings};
 	o.styles.forEach(function(c){
 		var j=0;
-		n=_n=c.name||'Noname';
+		n=_n=c.name||'NoName';
 		while(names[n]) n=_n+'_'+(++j);names[n]=1;
 		if(xF.checked) addFile({name:n+'.user.css',content:getFirefoxCSS(c)});
-		else addFile({name:n+'.json',content:JSON.stringify(c)});
+		else addFile({name:n+'.css.json',content:JSON.stringify(c)});
 	});
 	addFile({name:'Stylish',content:JSON.stringify(s)});
 	addFile({});	// finish adding files
@@ -243,15 +248,15 @@ function mAddItem(n){
 	d.innerText=n||S.childNodes.length;
 	return d;
 }
-function split(t){return t.replace(/^\s+|\s+$/g,'').split(/\s*\n\s*/).filter(function(e){return e;});}
+function toList(x){return x.split('\n').filter(function(x){return x;});}
 function mSection(r){
 	if(M.data[S.cur]){
 		if(S.dirty){
 			S.dirty=false;
-			M.data[S.cur].domains=split(rD.value);
-			M.data[S.cur].regexps=split(rR.value);
-			M.data[S.cur].urlPrefixes=split(rP.value);
-			M.data[S.cur].urls=split(rU.value);
+			M.data[S.cur].domains=toList(rD.value);
+			M.data[S.cur].regexps=toList(rR.value);
+			M.data[S.cur].urlPrefixes=toList(rP.value);
+			M.data[S.cur].urls=toList(rU.value);
 			M.data[S.cur].code=T.getValue();T.clearHistory();
 		}
 		if(r) S.childNodes[S.cur].classList.remove('selected');
