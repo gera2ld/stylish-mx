@@ -343,7 +343,6 @@ function parseCSS(d,src,callback){
 	try{
 		j=JSON.parse(d.code);
 	}catch(e){
-		console.log(e);
 		callback({id:d.id,status:-1,message:_('msgErrorParsing')});
 		return;
 	}
@@ -359,7 +358,7 @@ function parseCSS(d,src,callback){
 	});
 	queryStyle(d,function(c){
 		if(!c.id) c.name=j.name;
-		c.data=s;c.updated=Date.now();
+		c.data=s;c.updated=Date.now();c.md5=d.md5;
 		//c.updateUrl=j.updateUrl;
 		saveStyle(c,src,callback,_('msgUpdated'));
 	});
@@ -395,12 +394,13 @@ function checkUpdateO(o){
 			r.message=_('msgErrorFetchingUpdateInfo');
 			delete r.updating;
 			if(this.status==200) try{
-				if(o.md5!=this.responseText) {
+				var md5=this.responseText;
+				if(o.md5!=md5) {
 					if(o.updateUrl) {
 						r.message=_('msgUpdating');
 						r.updating=1;
 						fetchURL(o.updateUrl,function(){
-							parseCSS({status:this.status,id:o.id,updated:d,code:this.responseText});
+							parseCSS({status:this.status,id:o.id,md5:md5,updated:d,code:this.responseText});
 						});
 					} else r.message='<span class=new>'+_('msgNewVersion')+'</span>';
 				} else r.message=_('msgNoUpdate');

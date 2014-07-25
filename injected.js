@@ -54,7 +54,6 @@ window.setPopup=function(){
 // CSS applying
 var isApplied=true,style=null,styles=[];
 function loadStyle(o){
-	console.log(o.styles);
 	var i,c;
 	if('isApplied' in o) isApplied=o.isApplied;
 	if(o.styles) o.styles.forEach(function(o){
