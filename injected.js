@@ -114,14 +114,16 @@ function fixMaxthon(){
 	var req=new window.XMLHttpRequest();
 	req.open('GET',data.md5Url,true);
 	req.onloadend=function(){
-		data.md5=this.responseText;
-		if(this.status==200) post(B,{cmd:'CheckStyle',data:data.idUrl},function(o){
-			if(o){
-				if(o.md5!=data.md5) fireEvent('styleCanBeUpdatedChrome');
-				else fireEvent('styleAlreadyInstalledChrome');
-				data.id=o.id;
-			} else fireEvent('styleCanBeInstalledChrome');
-		});
+		if(this.status==200) {
+			data.md5=this.responseText;
+			post(B,{cmd:'CheckStyle',data:data.idUrl},function(o){
+				if(o){
+					if(o.md5!=data.md5) fireEvent('styleCanBeUpdatedChrome');
+					else fireEvent('styleAlreadyInstalledChrome');
+					data.id=o.id;
+				} else fireEvent('styleCanBeInstalledChrome');
+			});
+		}
 	};
 	req.send();
 

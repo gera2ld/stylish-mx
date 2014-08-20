@@ -20,8 +20,14 @@ function older(a,b,c,d){
 
 function initDb(callback){
 	var request=indexedDB.open('Stylish',1);
-	request.onsuccess=function(e){db=request.result;if(callback) callback();};
-	request.onerror=function(e){console.log('IndexedDB error: '+e.target.error.message);};
+	request.onsuccess=function(e){
+		console.log('Database opened.');
+		db=request.result;if(callback) callback();
+	};
+	request.onerror=function(e){
+		//new Notification('Stylish',{body:'IndexedDB error: '+e.target.error.message});
+		console.log('IndexedDB error: '+e.target.error.message);
+	};
 	request.onupgradeneeded=function(e){
 		var r=e.target.result,o;
 		// styles: id url name idUrl md5Url md5 updateUrl updated enabled data[name domains regexps urlPrefixes urls code]
@@ -30,9 +36,14 @@ function initDb(callback){
 	};
 }
 function upgradeData(callback){
-	function finish(){if(callback) callback();}
+	function finish(){
+		if(callback) callback();
+	}
 	function upgrade04(){
-		function dbError(t,e){console.log('Database error: '+e.message);}
+		function dbError(t,e){
+			//new Notification('Stylish',{body:'Database error: '+e.message});
+			console.log('Database error: '+e.message);
+		}
 		function toList(x){return x.split('\n').filter(function(x){return x;});}
 		var d=openDatabase('Stylish','0.4','Stylish data',10*1024*1024);
 		d.transaction(function(t){
@@ -88,9 +99,10 @@ function upgradeData(callback){
 	}
 	var version=localStorage.version_storage||'',i=0,cur='0.5';
 	if(older(version,cur)) {
-		if(version=='0.4') upgrade04();
 		localStorage.version_storage=0.5;
-	} else finish();
+		if(version=='0.4') return upgrade04();
+	}
+	finish();
 }
 function getMeta(o){
 	return {
@@ -98,6 +110,7 @@ function getMeta(o){
 		name:o.name,
 		url:o.url,
 		md5Url:o.md5Url,
+		md5:o.md5,
 		updated:o.updated,
 		enabled:o.enabled,
 	};
@@ -160,8 +173,10 @@ function saveStyle(d,src,callback,m){
 }
 function removeStyle(id,src,callback){
 	var o=db.transaction('styles','readwrite').objectStore('styles');
-	o.delete(id);
-	if(callback) callback();
+	o.delete(id).onsuccess=function(e){
+		broadcast('updateStyle('+id+',0)');
+		if(callback) callback();
+	};
 }
 function getStyle(id,src,callback){
 	var o=db.transaction('styles').objectStore('styles');
@@ -400,7 +415,7 @@ function checkUpdateO(o){
 						r.message=_('msgUpdating');
 						r.updating=1;
 						fetchURL(o.updateUrl,function(){
-							parseCSS({status:this.status,id:o.id,md5:md5,updated:d,code:this.responseText});
+							parseCSS({status:this.status,id:o.id,md5:md5,code:this.responseText});
 						});
 					} else r.message='<span class=new>'+_('msgNewVersion')+'</span>';
 				} else r.message=_('msgNoUpdate');
@@ -511,13 +526,6 @@ initDb(function(){
 				ExportZip:exportZip,
 				LoadStyle:loadStyle,
 				GetMetas:getMetas,
-				/*
-				GetMetas:function(ids,src,callback){	// for popup menu
-					var d=[];
-					ids.forEach(function(i){d.push(metas[i]);});
-					callback(d);
-				},
-				*/
 			},f=maps[o.cmd];
 			if(f) f(o.data,o.src,callback);
 			return true;
