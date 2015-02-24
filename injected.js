@@ -1,4 +1,6 @@
-(function(){
+(function(documentElement){
+// make sure this is an HTML page, ignore XML, etc.
+if(documentElement.tagName!='HTML') return;
 var location=window.location;
 // Messages
 var rt=window.external.mxGetRuntime(),id=Date.now()+Math.random().toString().slice(1),
@@ -68,11 +70,11 @@ function loadStyle(o){
 	if(isApplied) {
 		if(!style) {
 			style=document.createElement('style');
-			document.documentElement.appendChild(style);
+			documentElement.appendChild(style);
 		}
 		style.innerHTML=styles.map(function(o){return o[1];}).join('\n');
 	} else if(style) {
-		document.documentElement.removeChild(style);
+		documentElement.removeChild(style);
 		style=null;
 	}
 }
@@ -160,4 +162,4 @@ if(/\.user\.css$|\.css\.json$/.test(location.href)) {
 	else rawInstall();
 } else if(location.host=='userstyles.org'&&location.pathname.substr(0,8)=='/styles/')
 	window.addEventListener('DOMContentLoaded',fixMaxthon,false);
-})();
+})(document.documentElement);
