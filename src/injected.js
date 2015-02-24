@@ -91,11 +91,13 @@ function addStylesheet(i){
 function alterStyle(s){
 	for(var i in astyles) astyles[i].forEach(function(l){l.disabled=i!=s;});cur=s;
 }
-window.addEventListener('DOMContentLoaded',function(){
+function getAlternatives(){
 	Array.prototype.forEach.call(document.querySelectorAll('link[rel=stylesheet][title]'),addStylesheet);
 	Array.prototype.forEach.call(document.querySelectorAll('link[rel="alternate stylesheet"][title]'),addStylesheet);
 	post(P,{cmd:'GetPopup'});
-},false);
+}
+document.addEventListener('DOMContentLoaded',getAlternatives,false);
+getAlternatives();
 
 // Stylish fix
 var data=null;

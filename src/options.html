@@ -3,8 +3,7 @@
 	<head>
 		<meta charset="utf-8" />
 		<link rel="shortcut icon" type="image/png" href="icons/icon_32.png" />
-		<link rel="stylesheet" type="text/css" href="common.css" />
-		<link rel="stylesheet" type="text/css" href="options.css" />
+		<link rel="stylesheet" type="text/css" href="style.min.css" />
 		<script src='lib/zip.js/zip.js'></script>
 		<script src='load.js'></script>
 		<title data-i18n=extName></title>
@@ -23,22 +22,16 @@
 				</div>
 			</div>
 			<div class=content>
-				<table id=tabInstalled class=hide>
-					<tr>
-						<td>
-							<button id=bNew data-i18n=buttonNew></button>
-							<button id=bUpdate data-i18n=buttonUpdateAll></button>
-							<a href=https://userstyles.org target=_blank data-i18n=anchorGetMoreStyles></a>
-						</td>
-					</tr>
-					<tr class=expand>
-						<td class=expandr>
-							<div id=sList class=expanda>
-								<span id=message data-i18n=msgLoading></span>
-							</div>
-						</td>
-					</tr>
-				</table>
+				<div id=tabInstalled class=hide>
+					<div class=header>
+						<button id=bNew data-i18n=buttonNew></button>
+						<button id=bUpdate data-i18n=buttonUpdateAll></button>
+						<a href=https://userstyles.org target=_blank data-i18n=anchorGetMoreStyles></a>
+					</div>
+					<div id=sList>
+						<span id=message data-i18n=msgLoading></span>
+					</div>
+				</div>
 				<div id=tabSettings class=hide>
 					<h1 data-i18n=labelSettings></h1>
 					<label><input type=checkbox id=cReload><span data-i18n=labelStartReload></span></label>

@@ -1,8 +1,0 @@
-#popup{width:100%;height:100%;margin:0;padding:0;}
-#popup .expand>td{border-top:1px dashed gray;}
-.menu{overflow-y:auto;}
-.menu>div{cursor:pointer;padding:5px;display:block;}
-.menu>div span{display:inline-block;width:20px;}
-.menu>div:hover{background:gray;color:gold;}
-.menu>div.disabled{color:gray;}
-.menu>div.disabled:hover{color:silver;}

@@ -4,44 +4,53 @@ var $=document.getElementById.bind(document),P=$('popup'),
 	pT=P.querySelector('td'),pB=P.querySelector('.expanda'),
 	cT=A.querySelector('td'),cB=A.querySelector('.expanda');
 function loadItem(d,c){
-	if(c) {
-		d.firstChild.innerText=d.symbol;
-		d.classList.remove('disabled');
-	} else {
-		d.firstChild.innerText='';
-		d.classList.add('disabled');
-	}
 	d.data=c;
+	if(d.symbols) {
+		d.firstChild.className='fa '+d.symbols[c?1:0];
+		if(d.symbols.length>1) {
+			if(c) d.classList.remove('disabled');
+			else d.classList.add('disabled');
+		}
+	}
 }
 function addItem(h,c){
 	var d=document.createElement('div');
-	d.innerHTML='<span></span>'+h;
+	d.innerHTML='<i></i> '+h;
 	if('title' in c) {
 		d.title=typeof c.title=='string'?c.title:h;
 		delete c.title;
 	}
-	d.className='ellipsis';
 	c.holder.appendChild(d);
-	if('symbol' in c) d.firstChild.innerText=c.symbol;
-	else if('data' in c) c.symbol='✓';
 	for(h in c) d[h]=c[h];
-	if('data' in c) loadItem(d,c.data);
+	if(d.symbols) loadItem(d,d.data);
 	return d;
 }
 function menuStyle(c) {
 	var n=c.name?c.name.replace(/&/g,'&amp;').replace(/</g,'&lt;'):'<em>'+_('labelNoName')+'</em>';
-	n=addItem(n,{holder:pB,data:c.enabled,title:c.name,onclick:function(){
-		post({cmd:'EnableStyle',data:{id:c.id,data:!n.data}},function(o){
-			loadItem(n,!n.data);
-		});
-	}});
+	n=addItem(n,{
+		holder:pB,
+		symbols: ['fa-times','fa-check'],
+		className: 'ellipsis',
+		data:c.enabled,
+		title:c.name,
+		onclick:function(){
+			post({cmd:'EnableStyle',data:{id:c.id,data:!n.data}},function(o){loadItem(n,!n.data);});
+		},
+	});
 }
 var cur=null,_title,count=0;
 function alterStyle(i){
-	var d=addItem(i,{holder:cB,data:i==_title,title:true,onclick:function(){
-		if(cur) loadItem(cur,false);loadItem(cur=this,true);
-		if(tab) rt.post(tab,{topic:'AlterStyle',data:i});
-	}});
+	var d=addItem(i,{
+		holder:cB,
+		symbols: ['fa-square-o','fa-check-square-o'],
+		data:i==_title,
+		title:true,
+		onclick:function(){
+			if(cur) loadItem(cur,false);
+			loadItem(cur=this,true);
+			if(tab) rt.post(tab,{cmd:'AlterStyle',data:i});
+		},
+	});
 	if(i==_title) cur=d;
 }
 function getPopup(){
@@ -53,28 +62,53 @@ function getPopup(){
 function load(o,src,callback){
 	tab=src&&src.id;
 	pT.innerHTML=pB.innerHTML=cT.innerHTML=cB.innerHTML='';
-	addItem(_('menuManageStyles'),{holder:pT,symbol:'➤',title:true,onclick:function(){
-		br.tabs.newTab({url:rt.getPrivateUrl()+'options.html',activate:true});
-	}});
-	if(o) addItem(_('menuFindStyles'),{holder:pT,symbol:'➤',title:true,onclick:function(){
-		br.tabs.newTab({url:'http://userstyles.org/styles/search/'+encodeURIComponent(br.tabs.getCurrentTab().url),activate:true});
-	}});
+	addItem(_('menuManageStyles'),{
+		holder:pT,
+    symbols: ['fa-hand-o-right'],
+		//title:true,
+		onclick:function(){
+			br.tabs.newTab({url:rt.getPrivateUrl()+'options.html',activate:true});
+		},
+	});
+	if(o) addItem(_('menuFindStyles'),{
+		holder:pT,
+		symbols: ['fa-hand-o-right'],
+		//title:true,
+		onclick:function(){
+			br.tabs.newTab({url:'http://userstyles.org/styles/search/'+encodeURIComponent(br.tabs.getCurrentTab().url),activate:true});
+		},
+	});
 	if(o&&o.astyles&&o.astyles.length) {
 		_title=o.cstyle||'';
-		addItem(_('menuBack'),{holder:cT,symbol:'◄',title:true,onclick:function(){
-			A.classList.add('hide');P.classList.remove('hide');
-		}});
-		o.astyles.forEach(alterStyle);
-		addItem(_('menuAlterStylesheet'),{holder:pT,symbol:'➤',title:true,onclick:function(){
-			P.classList.add('hide');A.classList.remove('hide');
-		}});
-	}
-	var a=addItem(_('menuStylesEnabled'),{holder:pT,data:true,title:true,onclick:function(e){
-		post({cmd:'SetOption',data:{key:'isApplied',value:!a.data}},function(o){
-			loadItem(a,!a.data);rt.icon.setIconImage('icon'+(a.data?'':'w'));
+		addItem(_('menuBack'),{
+			holder:cT,
+      symbols: ['fa-arrow-left'],
+			//title:true,
+			onclick:function(){
+				A.classList.add('hide');P.classList.remove('hide');
+			},
 		});
-		broadcast('updateStyle();');
-	}});
+		o.astyles.forEach(alterStyle);
+		addItem(_('menuAlterStylesheet'),{
+			holder:pT,
+			symbols: ['fa-hand-o-right'],
+			//title:true,
+			onclick:function(){
+				P.classList.add('hide');A.classList.remove('hide');
+			},
+		});
+	}
+	var a=addItem(_('menuStylesEnabled'),{
+		holder:pT,
+		symbols: ['fa-times','fa-check'],
+		//title:true,
+		onclick:function(e){
+			post({cmd:'SetOption',data:{key:'isApplied',value:!a.data}},function(o){
+				loadItem(a,!a.data);rt.icon.setIconImage('icon'+(a.data?'':'w'));
+			});
+			broadcast('updateStyle();');
+		},
+	});
 	post({cmd:'GetOption',data:'isApplied'},function(o){loadItem(a,o);});
 	if(o&&o.styles&&o.styles.length) {
 		pR.classList.remove('hide');
