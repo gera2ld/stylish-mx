@@ -1,0 +1,39 @@
+﻿[
+	{
+		"type": "extension",
+		"frameworkVersion":"1.0.6",
+		"version":"2.4.3",
+		"guid": "{25d5eed5-1c91-4dde-ba91-9b6c9f786b1f}",
+		"author":{
+			"name":"Gerald",
+			"email":"gera2ld@163.com"
+		},
+		"name": "Stylish",
+		"title": {
+			"en": "Stylish for Maxthon",
+			"zh-cn": "Stylish傲游版"
+		},
+		"permissions":{
+			"httpRequest":["*"],
+			"notifications":true
+		},
+		"config":"options.html",
+		"service":{
+			"main":"background.html",
+			"debug":false
+		},
+		"actions": [
+			{
+				"type": "script",
+				"entryPoints": ["doc_start"],
+				"js":["injected.js"],
+				"includeFrames":true
+			},{
+				"type": "panel",
+				"icon":"iconw",
+				"entryPoints": ["sidebar"],
+				"main":"popup.html"
+			}
+		]
+	}
+]

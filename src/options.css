@@ -31,6 +31,9 @@ textarea,input[type=text]{box-sizing:border-box;width:100%;}
 #wndEditor>tbody>tr>td{height:100%;}
 .rules{width:100%;}
 .rules textarea{height:100px;}
+.rules td{transition:width .5s;width:25%;}
+.rules.focus td{width:17%;}
+.rules td.focus{width:49%;}
 #wndEditor .side{width:220px;}
 #mSection>div{padding:0 10px;}
 #mSection>.selected{background:gray;color:white;}

@@ -230,7 +230,7 @@ function exported(o){
 // Style Editor
 var M=$('#wndEditor'),S=$('#mSection'),I=$('#mName'),
     rD=$('#mDomain'),rR=$('#mRegexp'),rP=$('#mUrlPrefix'),rU=$('#mUrl'),
-    eS=$('#mSave'),eSC=$('#mSaveClose'),T;
+    eS=$('#mSave'),eSC=$('#mSaveClose'),R=$('.rules'),T,cR=null;
 function edit(o){
 	M.classList.remove('hide');
 	M.css=o;M.data=o.data;
@@ -330,10 +330,29 @@ $('#mRen').onclick=function(){
 eS.onclick=mSave;
 eSC.onclick=function(){mSave();mClose();};
 M.close=$('#mClose').onclick=function(){if(confirmCancel(!eS.disabled)) mClose();};
-function ruleFocus(e){e.target.parentNode.style.width='50%';}
-function ruleBlur(e){e.target.parentNode.style.width='';}
-[rD,rR,rP,rU].forEach(function(i){i.onfocus=ruleFocus;i.onblur=ruleBlur;});
+function ruleFocus(e){
+	if(cR&&(!e||e.type=='blur'&&cR===e.target.parentNode)) {
+		cR.classList.remove('focus');cR=null;
+	}
+	if(e.type=='focus') {
+		cR=e.target.parentNode;cR.classList.add('focus');
+		R.classList.add('focus');
+	} else R.classList.remove('focus');
+}
+R.addEventListener('focus',ruleFocus,true);
+R.addEventListener('blur',ruleFocus,true);
 initEditor(function(o){T=o;},{onchange:S.markDirty});
+M.addEventListener('keydown',function(e){
+	switch(e.keyCode) {
+		case 83:
+			if(e.ctrlKey)
+				mSave();	// C-S
+			break;
+		case 27:
+			M.close();	// Esc
+			break;
+	}
+},false);
 
 // Load at last
 var ids,map,post=initMessage({});

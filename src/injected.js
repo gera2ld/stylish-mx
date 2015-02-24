@@ -1,6 +1,6 @@
 (function(documentElement){
 // make sure this is an HTML page, ignore XML, etc.
-if(documentElement.tagName!='HTML') return;
+if(documentElement.tagName.toLowerCase()!='html') return;
 var location=window.location;
 // Messages
 var rt=window.external.mxGetRuntime(),id=Date.now()+Math.random().toString().slice(1),
