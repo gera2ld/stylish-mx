@@ -14,11 +14,11 @@ function _(k,a){
 	return v;
 };
 function initI18n(callback){
-	window.addEventListener('DOMContentLoaded',function(){
+	document.addEventListener('DOMContentLoaded',function(){
 		var nodes=document.querySelectorAll('*[data-i18n]'),i;
 		for(i=0;i<nodes.length;i++) nodes[i].innerHTML=_(nodes[i].getAttribute('data-i18n'));
 		if(callback) callback();
-	},true);
+	},false);
 }
 function getUniqueId(){return Date.now()+Math.random().toString().slice(1);}
 function initMessage(map){

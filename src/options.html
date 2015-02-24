@@ -1,10 +1,10 @@
 <!doctype html>
 <html>
 	<head>
-		<meta http-equiv="content-type" content="text/html;charset=utf-8">
-		<link rel="shortcut icon" type="image/png" href="icons/icon_32.png">
-		<link rel="stylesheet" type="text/css" href="common.css">
-		<link rel="stylesheet" type="text/css" href="options.css">
+		<meta charset="utf-8" />
+		<link rel="shortcut icon" type="image/png" href="icons/icon_32.png" />
+		<link rel="stylesheet" type="text/css" href="common.css" />
+		<link rel="stylesheet" type="text/css" href="options.css" />
 		<script src='lib/zip.js/zip.js'></script>
 		<script src='load.js'></script>
 		<title data-i18n=extName></title>
@@ -64,48 +64,54 @@
 				</div>
 			</div>
 		</div>
-		<table id=wndEditor class=hide>
-			<tr>
-				<td class=side>
-					<table>
-						<tr><td><h2 data-i18n=labelStyleEditor></h2></td></tr>
-						<tr><td data-i18n=labelName></td></tr>
-						<tr><td><textarea id=mName></textarea></td></tr>
-						<tr><td data-i18n=labelSections></td></tr>
-						<tr class=expand><td class=expandr><div id=mSection class="list expanda"></div></td></tr>
-						<tr><td><button id=mNew data-i18n=buttonNewSection></button> <button id=mDel data-i18n=buttonDeleteSection></button> <button id=mRen data-i18n=buttonRenameSection></button></td></tr>
-					</table>
-				</td>
-				<td>
-					<table>
-						<tr><td data-i18n=labelRules></td></tr>
-						<tr>
-							<td>
-								<table class=rules>
-									<tr>
-										<td title="domain"><span data-i18n=labelDomains></span><textarea id=mDomain></textarea></td>
-										<td title="regexp"><span data-i18n=labelRegExps></span><textarea id=mRegexp></textarea></td>
-										<td title="url-prefix"><span data-i18n=labelUrlPrefixes></span><textarea id=mUrlPrefix></textarea></td>
-										<td title="url"><span data-i18n=labelURLs></span><textarea id=mUrl></textarea></td>
-									</tr>
-								</table>
-							</td>
-						</tr>
-						<tr><td data-i18n=labelCode></td></tr>
-						<tr class=expand><td id=mCode class=expandr></td></tr>
-						<tr>
-							<td class=right>
-								<button id=mSave data-i18n=buttonSave></button>
-								<button id=mSaveClose data-i18n=buttonSaveClose></button>
-								<button id=mClose data-i18n=buttonClose></button>
-							</td>
-						</tr>
-					</table>
-				</td>
-			</tr>
-		</table>
+		<div id=wndEditor class=hide>
+			<div class=side>
+				<h2 class=box data-i18n=labelStyleEditor></h2>
+				<label data-i18n=labelName></label>
+				<textarea id=mName></textarea>
+				<label data-i18n=labelSections></label>
+				<div id=pSection>
+					<div id=mSection class=list></div>
+				</div>
+				<div class=footer>
+					<button id=mNew data-i18n=buttonNewSection></button> <button id=mDel data-i18n=buttonDeleteSection></button> <button id=mRen data-i18n=buttonRenameSection></button>
+				</div>
+			</div>
+			<div class=detail>
+				<div class=box>
+					<label data-i18n=labelRules></label>
+					<div class=rules>
+						<fieldset title="domain">
+							<legend data-i18n=labelDomains></legend>
+							<textarea id=mDomain></textarea>
+						</fieldset>
+						<fieldset title="regexp">
+							<legend data-i18n=labelRegExps></legend>
+							<textarea id=mRegexp></textarea>
+						</fieldset>
+						<fieldset title="url-prefix">
+							<legend data-i18n=labelUrlPrefixes></legend>
+							<textarea id=mUrlPrefix></textarea>
+						</fieldset>
+						<fieldset title="url">
+							<legend data-i18n=labelURLs></legend>
+							<textarea id=mUrl></textarea>
+						</fieldset>
+					</div>
+				</div>
+				<div class="code box">
+					<label data-i18n=labelCode></label>
+					<div id=mCode></div>
+				</div>
+				<div class="right footer">
+					<button id=mSave data-i18n=buttonSave></button>
+					<button id=mSaveClose data-i18n=buttonSaveClose></button>
+					<button id=mClose data-i18n=buttonClose></button>
+				</div>
+			</div>
+		</div>
+		<script src="common.js"></script>
+		<script src="editor.js"></script>
+		<script src="options.js"></script>
 	</body>
 </html>
-<script src="common.js"></script>
-<script src="editor.js"></script>
-<script src="options.js"></script>
