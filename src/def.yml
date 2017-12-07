@@ -1,0 +1,32 @@
+- type: extension
+  frameworkVersion: 1.0.6
+  version: __VERSION__
+  guid: '{25d5eed5-1c91-4dde-ba91-9b6c9f786b1f}'
+  author:
+    name: Gerald
+    email: i@gerald.top
+  name: Stylish
+  title:
+    _t: extName
+  description:
+    _t: extDescription
+  permissions:
+    httpRequest:
+      - '*'
+    notifications: true
+  config: options/index.html
+  service:
+    main: background/index.html
+  actions:
+    - type: script
+      entryPoints:
+        - doc_start
+      js:
+        - browser.js
+        - injected.js
+      includeFrames: true
+    - type: panel
+      icon: iconw
+      entryPoints:
+        - sidebar
+      main: popup/index.html

@@ -1,0 +1,525 @@
+﻿anchorAuthor:
+  description: Author shown on about tab.
+  message: '<a href=mailto:gera2ld@163.com>Gerald</a>'
+anchorTranslator:
+  description: Translator shown on about tab.
+  message: 10ours
+buttonAllNone:
+  description: Button to select all scripts or none.
+  message: Toutes/Aucune
+  touched: false
+buttonCancel:
+  description: Cancel button on dialog.
+  message: ''
+buttonClose:
+  description: Button to close window.
+  message: Fermer
+  touched: false
+buttonConfirmInstallation:
+  description: Button to confirm installation of a script.
+  message: ''
+  touched: false
+buttonDisable:
+  description: Button to disable a script.
+  message: D&eacute;sactiver
+buttonEdit:
+  description: Button to edit a script.
+  message: Editer
+buttonEnable:
+  description: Button to enable a script.
+  message: Activer
+buttonExportData:
+  description: Button to open the data export dialog.
+  message: Exporter en fichier zip
+  touched: false
+buttonFilter:
+  description: Button to show filters menu.
+  message: ''
+  touched: false
+buttonHome:
+  description: Button to open homepage.
+  message: ''
+buttonImportData:
+  description: Button to choose a file for data import.
+  message: Import from zip file
+  touched: false
+buttonInstallFromURL:
+  description: Button to ask for URL of a user script.
+  message: ''
+  touched: false
+buttonInstallOptions:
+  description: Button to show options of installation confirm page.
+  message: ''
+  touched: false
+buttonNew:
+  description: Button to create a new script.
+  message: Nouveau
+buttonOK:
+  description: OK button on dialog.
+  message: ''
+buttonRemove:
+  description: Button to remove a script.
+  message: Supprimer
+buttonReplace:
+  description: Button to replace the current match.
+  message: Replace
+buttonReplaceAll:
+  description: Button to replace all matches.
+  message: All
+buttonSave:
+  description: Button to save modifications of a script.
+  message: Enregistrer
+  touched: false
+buttonSaveBlacklist:
+  description: Button to save global blacklist.
+  message: ''
+  touched: false
+buttonSaveClose:
+  description: Button to save modifications of a script and then close the editing page.
+  message: Enregistrer & Fermer
+  touched: false
+buttonSaveCustomCSS:
+  description: Label for button to save custom CSS.
+  message: ''
+  touched: false
+buttonSupport:
+  description: Button to open support page.
+  message: ''
+  touched: false
+buttonUndo:
+  description: Button to undo removement of a script.
+  message: ''
+buttonUpdate:
+  description: Check a script for updates.
+  message: V&eacute;rifier les mises &agrave; jour
+buttonUpdateAll:
+  description: Check all scripts for updates.
+  message: V&eacute;rifier les mises &agrave; jour pour tous
+buttonVacuum:
+  description: Button to vacuum extension data.
+  message: ''
+  touched: false
+buttonVacuumed:
+  description: Message shown when data is vacuumed.
+  message: ''
+  touched: false
+buttonVacuuming:
+  description: Message shown when data vacuum is in progress.
+  message: ''
+  touched: false
+confirmNotSaved:
+  description: Confirm message shown when there are unsaved script modifications.
+  message: |-
+    Les modifications ne sont pas enregistr&eacute;es !
+    OK pour continuer ou annuler pour revenir.
+  touched: false
+descBlacklist:
+  description: HTML Description for the global blacklist.
+  message: ''
+  touched: false
+descCustomCSS:
+  description: Description of custom CSS section.
+  message: ''
+  touched: false
+editLabelMeta:
+  description: Metadata section in settings tab of script editor.
+  message: ''
+  touched: false
+editLabelSettings:
+  description: Settings section in settings tab of script editor.
+  message: ''
+  touched: false
+editNavCode:
+  description: Label of code tab in script editor.
+  message: ''
+  touched: false
+editNavSettings:
+  description: Label of settings tab in script editor.
+  message: ''
+  touched: false
+extDescription:
+  description: Description for this extension.
+  message: Stylish for Maxthon allows custom styles for different URLs.
+extName:
+  description: Name of this extension.
+  message: Stylish pour Maxthon
+filterAlphabeticalOrder:
+  description: Label for option to sort scripts in alphabetical order.
+  message: ''
+  touched: false
+filterExecutionOrder:
+  description: Label for option to sort scripts in execution order.
+  message: ''
+  touched: false
+hintInputURL:
+  description: Hint for a prompt box to input URL of a user script.
+  message: ''
+hintUseDownloadURL:
+  description: Shown as a place holder for @updateURL when it is not assigned
+  message: ''
+  touched: false
+hintVacuum:
+  description: Hint for vacuuming data.
+  message: ''
+  touched: false
+installFrom:
+  description: Label for button to install script from a userscript site.
+  message: ''
+installOptionClose:
+  description: Option to close confirm window after installation.
+  message: ''
+  touched: false
+installOptionTrack:
+  description: Option to track the loading local file before window is closed.
+  message: ''
+  touched: false
+labelAbout:
+  description: Label shown on top of the about page.
+  message: About Stylish for Maxthon
+labelAllowUpdate:
+  description: Option to allow checking updates for a script.
+  message: ''
+  touched: false
+labelAuthor:
+  description: Label of author shown in the details of a script.
+  message: 'Author: '
+labelAutoReloadCurrentTab:
+  description: Option to reload current tab after a script is switched on or off from menu.
+  message: ''
+  touched: false
+labelAutoUpdate:
+  description: Option to allow automatically checking scripts for updates every 24 hours.
+  message: ''
+  touched: false
+labelBlacklist:
+  description: Label for global blacklist settings in security section.
+  message: ''
+  touched: false
+labelCurrentLang:
+  description: Label of current language.
+  message: ''
+labelCustomCSS:
+  description: Label for custom CSS section.
+  message: ''
+  touched: false
+labelDataExport:
+  description: Section title of data export.
+  message: Data Export
+  touched: false
+labelDataImport:
+  description: Section title of data import.
+  message: Data Import
+  touched: false
+labelDonate:
+  description: Label of link to donate page.
+  message: Donate
+labelDownloadURL:
+  description: Label of script @downloadURL in custom meta data.
+  message: ''
+  touched: false
+labelExclude:
+  description: Label of @exclude rules.
+  message: ''
+  touched: false
+labelExcludeMatch:
+  description: Label of @exclude-match rules.
+  message: ''
+  touched: false
+labelExportScriptData:
+  description: Option to export script data along with scripts.
+  message: ''
+  touched: false
+labelFeedback:
+  description: Label of link to feedback page.
+  message: Feedback
+labelFilterSort:
+  description: Label for sort filter.
+  message: ''
+  touched: false
+labelGeneral:
+  description: Label for general settings.
+  message: ''
+  touched: false
+labelHomepageURL:
+  description: Label of script @homepageURL in custom meta data.
+  message: ''
+  touched: false
+labelImportSettings:
+  description: Label for option to import settings from zip file.
+  message: ''
+  touched: false
+labelInclude:
+  description: Label of @include rules.
+  message: ''
+  touched: false
+labelInstall:
+  description: Shown in the title of the confirm page while trying to install a script.
+  message: ''
+  touched: false
+labelKeepOriginal:
+  description: Option to keep the original match or ignore rules.
+  message: ''
+  touched: false
+labelLastUpdatedAt:
+  description: Label shown on last updated time.
+  message: ''
+  touched: false
+labelLineNumber:
+  description: Label for line number jumper.
+  message: ''
+labelMatch:
+  description: Label of @match rules.
+  message: ''
+  touched: false
+labelName:
+  description: Label of script name.
+  message: 'Nom :'
+  touched: false
+labelNoName:
+  description: Text as the name of a script when no @name is assigned.
+  message: Sans Nom
+  touched: false
+labelNoScripts:
+  description: Message shown when no script is installed.
+  message: ''
+labelNoSearchScripts:
+  description: Message shown when no script is found in search results.
+  message: ''
+labelNotifyUpdates:
+  description: Option to show notification when script is updated.
+  message: ''
+  touched: false
+labelRelated:
+  description: Label of related links.
+  message: 'Related links: '
+labelReloadHTTPS:
+  description: Option to reload HTTPS pages on extension start
+  message: ''
+  touched: false
+labelRemoved:
+  description: Label shown when a script is removed.
+  message: ''
+labelReplace:
+  description: Label for replace input in search box.
+  message: 'Replace with: '
+labelRunAt:
+  description: Label of script @run-at properties in custom meta data.
+  message: ''
+  touched: false
+labelRunAtDefault:
+  description: Shown when custom @run-at is not assigned.
+  message: ''
+  touched: false
+labelScriptEditor:
+  description: Shown in the title of the script editing page.
+  message: ''
+  touched: false
+labelSearch:
+  description: Label for search input in search box.
+  message: 'Search for: '
+labelSearchScript:
+  description: Placeholder for script search box.
+  message: ''
+labelSettings:
+  description: Label shown on the top of settings page
+  message: Options
+  touched: false
+labelShowBadge:
+  description: Option to show number of running scripts on the badge.
+  message: ''
+  touched: false
+labelStartReload:
+  description: Option to reload pages on extension start
+  message: Reload pages on extension start
+  touched: false
+labelSync:
+  description: Label for sync options.
+  message: ''
+  touched: false
+labelSyncAuthorize:
+  description: Label for button to authorize a service.
+  message: ''
+  touched: false
+labelSyncAuthorizing:
+  description: Label for button when authorization is in progress.
+  message: ''
+  touched: false
+labelSyncDisabled:
+  description: Label for option to disable sync service.
+  message: ''
+  touched: false
+labelSyncReauthorize:
+  description: Option to reauthorize sync service when expired.
+  message: ''
+  touched: false
+labelSyncRevoke:
+  description: Label for button to revoke authorization for a service.
+  message: ''
+  touched: false
+labelSyncScriptStatus:
+  description: Label for option to sync script status.
+  message: ''
+  touched: false
+labelSyncService:
+  description: Label for sync service select.
+  message: ''
+  touched: false
+labelTranslator:
+  description: Label of translator.
+  message: 'Translator: '
+labelUpdateURL:
+  description: Label of script @updateURL in custom meta data.
+  message: ''
+  touched: false
+lastSync:
+  description: Label for last sync timestamp.
+  message: ''
+  touched: false
+learnBlacklist:
+  description: Refers to a link to introduce blacklist patterns.
+  message: ''
+  touched: false
+menuCommands:
+  description: Menu item to list script commands.
+  message: ''
+  touched: false
+menuDashboard:
+  description: Label for menu item to open dashboard.
+  message: ''
+  touched: false
+menuFindScripts:
+  description: Menu item to find scripts for a site.
+  message: ''
+  touched: false
+menuMatchedScripts:
+  description: Label for menu listing matched scripts.
+  message: ''
+  touched: false
+menuScriptDisabled:
+  description: 'Menu item showing the status of Violentmonkey, when disabled.'
+  message: ''
+  touched: false
+menuScriptEnabled:
+  description: 'Menu item showing the status of Violentmonkey, when enabled.'
+  message: ''
+  touched: false
+msgCheckingForUpdate:
+  description: Message shown when a script is being checked for updates by version numbers.
+  message: V&eacute;rification des mises &agrave; jour...
+msgConfirmInstall:
+  description: Message shown to confirm installation of a style.
+  message: ''
+msgErrorFetchingScript:
+  description: Message shown when Violentmonkey fails fetching a new version of the script.
+  message: ''
+msgErrorFetchingUpdateInfo:
+  description: Message shown when Violentmonkey fails fetching version data of the script.
+  message: Impossible de trouver des mises &agrave; jour.
+msgErrorLoadingData:
+  description: >-
+    Message shown on confirm page when the script to be installed cannot be
+    loaded.
+  message: ''
+  touched: false
+msgErrorLoadingDependency:
+  description: Message shown when not all requirements are loaded successfully.
+  message: ''
+  touched: false
+msgImported:
+  description: >-
+    Message shown after import. There is an argument referring to the count of
+    scripts imported.
+  message: $1 item(s) are imported.
+  touched: false
+msgInstalled:
+  description: Message shown when a script is installed.
+  message: Style installed.
+msgInvalidScript:
+  description: Message shown when script is invalid.
+  message: ''
+msgLoadedData:
+  description: >-
+    Message shown in the confirm page when a javascript file to be installed is
+    loaded.
+  message: ''
+  touched: false
+msgLoading:
+  description: Message shown in the options page before script list is loaded.
+  message: Loading...
+msgLoadingData:
+  description: Message shown on confirm page when the script to be installed is loading.
+  message: ''
+  touched: false
+msgLoadingDependency:
+  description: Message shown on confirm page when the requirements are being downloaded.
+  message: ''
+  touched: false
+msgNamespaceConflict:
+  description: >-
+    Message shown when namespace of the new script conflicts with an existent
+    one.
+  message: ''
+msgNewVersion:
+  description: >-
+    Message shown when a new version of script is found by @updateURL, but no
+    @downloadURL is provided.
+  message: Nouvelle version disponible.
+  touched: false
+msgNoUpdate:
+  description: Message shown when there is no new version of a script.
+  message: Aucune mise &agrave; jour trouv&eacute;e !
+msgSavedBlacklist:
+  description: Message shown when blacklist are saved.
+  message: ''
+  touched: false
+msgSavedCustomCSS:
+  description: Message shown when custom CSS is saved.
+  message: ''
+  touched: false
+msgScriptUpdated:
+  description: Notification message for script updates.
+  message: ''
+  touched: false
+msgSyncError:
+  description: Message shown when sync failed.
+  message: ''
+  touched: false
+msgSyncInit:
+  description: Message shown when sync service is initializing.
+  message: ''
+  touched: false
+msgSyncInitError:
+  description: Message shown when sync fails in initialization.
+  message: ''
+  touched: false
+msgSyncReady:
+  description: Message shown when sync will start soon.
+  message: ''
+  touched: false
+msgSyncing:
+  description: Message shown when sync is in progress.
+  message: ''
+  touched: false
+msgUpdated:
+  description: Message shown when a script is updated/reinstalled.
+  message: Style mis &agrave; jour.
+msgUpdating:
+  description: Message shown when a new version of script is being fetched.
+  message: Mise &agrave; jour...
+optionShowEnabledFirst:
+  description: Option to show enabled scripts first in alphabetical order.
+  message: ''
+  touched: false
+sideMenuAbout:
+  description: 'Side menu: About'
+  message: About
+sideMenuInstalled:
+  description: 'Side menu: Installed scripts'
+  message: Styles install&eacute;s
+sideMenuSettings:
+  description: 'Side menu: Settings'
+  message: Settings
+titleScriptUpdated:
+  description: Notification title for script updates.
+  message: ''
+  touched: false

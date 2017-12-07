@@ -1,3 +1,6 @@
 dist/
-*.bat
 node_modules/
+*.bat
+*.mxaddon
+*.log
+*.lock
