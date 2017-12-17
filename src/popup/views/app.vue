@@ -5,7 +5,7 @@
     </div>
     <div class="menu-item" :class="{disabled:!options.isApplied}" @click="onToggle">
       <icon :name="getSymbolCheck(options.isApplied)"></icon>
-      <span v-text="options.isApplied ? i18n('menuScriptEnabled') : i18n('menuScriptDisabled')"></span>
+      <span v-text="options.isApplied ? i18n('menuStyleEnabled') : i18n('menuStyleDisabled')"></span>
     </div>
     <div class="menu">
       <div class="menu-item" @click="onManage">
@@ -16,13 +16,13 @@
     <div class="menu menu-domains" v-if="currentUrl" :class="{expand: activeMenu === 'domains'}">
       <div class="menu-item" target="_blank" @click="onFindStyles">
         <icon name="search"></icon>
-        <span v-text="i18n('menuFindScripts')"></span>
+        <span v-text="i18n('menuFindStyles')"></span>
       </div>
     </div>
     <div class="menu menu-styles" v-show="styles.length" :class="{expand: activeMenu === 'styles'}">
       <div class="menu-item" @click="toggleMenu('styles')">
         <icon name="more" class="icon-right icon-collapse"></icon>
-        <span v-text="i18n('menuMatchedScripts')"></span>
+        <span v-text="i18n('menuMatchedStyles')"></span>
       </div>
       <div class="submenu">
         <div class="menu-item" v-for="item in styles" @click="onToggleStyle(item)" :class="{disabled:!item.data.config.enabled}">

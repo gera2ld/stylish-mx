@@ -5,9 +5,6 @@
       <h1 v-text="i18n('extName')"></h1>
       <div class="sidemenu">
         <a href="#?t=Installed" :class="{active: tab === 'Installed'}" v-text="i18n('sideMenuInstalled')"></a>
-        <a name="settings" href="#?t=Settings" :class="{active: tab === 'Settings'}">
-          <span class="feature-text" v-text="i18n('sideMenuSettings')"></span>
-        </a>
         <a href="#?t=About" :class="{active: tab === 'About'}" v-text="i18n('sideMenuAbout')"></a>
       </div>
     </aside>
@@ -18,12 +15,10 @@
 <script>
 import { store } from '../utils';
 import Installed from './tab-installed';
-// import Settings from './tab-settings';
 import About from './tab-about';
 
 const tabs = {
   Installed,
-  // Settings,
   About,
 };
 

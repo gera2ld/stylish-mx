@@ -18,7 +18,7 @@
         </tooltip>
       </div>
       <div class="filter-search">
-        <input type="text" :placeholder="i18n('labelSearchScript')" v-model="search">
+        <input type="text" :placeholder="i18n('labelSearchStyle')" v-model="search">
         <icon name="search"></icon>
       </div>
     </header>
@@ -35,7 +35,7 @@
 
 <script>
 import VlDropdown from 'vueleton/lib/dropdown';
-import { i18n, sendMessage, noop, debounce } from 'src/common';
+import { i18n, sendMessage, debounce } from 'src/common';
 import { objectGet } from 'src/common/object';
 // import options from 'src/common/options';
 import SettingCheck from 'src/common/ui/setting-check';
@@ -45,7 +45,7 @@ import Tooltip from 'src/common/ui/tooltip';
 import LocaleGroup from 'src/common/ui/locale-group';
 import Item from './style-item';
 import Edit from './edit';
-import { store, showMessage } from '../utils';
+import { store } from '../utils';
 
 Object.assign(store, {
   filteredStyles: null,
@@ -79,10 +79,10 @@ export default {
         return i18n('msgLoading');
       }
       if (!this.store.styles.length) {
-        return i18n('labelNoScripts');
+        return i18n('labelNoStyles');
       }
       if (!objectGet(this.store, 'filteredStyles.length')) {
-        return i18n('labelNoSearchScripts');
+        return i18n('labelNoSearchStyles');
       }
     },
   },
@@ -104,31 +104,6 @@ export default {
     },
     updateAll() {
       sendMessage({ cmd: 'CheckUpdateAll' });
-    },
-    installFromURL() {
-      new Promise((resolve, reject) => {
-        showMessage({
-          text: i18n('hintInputURL'),
-          onBackdropClick: reject,
-          buttons: [
-            {
-              type: 'submit',
-              text: i18n('buttonOK'),
-              onClick: resolve,
-            },
-            {
-              text: i18n('buttonCancel'),
-              onClick: reject,
-            },
-          ],
-        });
-      })
-      .then(url => {
-        if (url && url.includes('://')) return sendMessage({ cmd: 'ConfirmInstall', data: { url } });
-      }, noop)
-      .catch(err => {
-        if (err) showMessage({ text: err });
-      });
     },
     editStyle(id) {
       this.style = this.store.styles.find(style => style.props.id === id);

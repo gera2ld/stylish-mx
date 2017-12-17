@@ -70,7 +70,8 @@ function initUserstylesOrg() {
   function onInstall() {
     sendMessage({ cmd: 'ConfirmInstall', data: { type: styleId ? 'update' : 'install', desc } })
     .then(message => {
-      if (!confirm(message)) return Promise.reject();
+      // eslint-disable-next-line no-alert
+      if (!window.confirm(message)) return Promise.reject();
       return getPayload(styleId);
     })
     .then(payload => sendMessage({ cmd: 'ParseStyle', data: payload }))

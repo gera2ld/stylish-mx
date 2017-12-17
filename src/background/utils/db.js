@@ -241,7 +241,7 @@ export function getExportData(ids) {
 
 export function parseStyle(data) {
   const {
-    id, meta, message, isNew, config, props, sections,
+    id, meta, message, config, props, sections,
   } = data;
   if (!meta.name) return Promise.reject(i18n('msgInvalidStyle'));
   const result = {
@@ -256,7 +256,6 @@ export function parseStyle(data) {
   .then(oldStyle => {
     let style;
     if (oldStyle) {
-      if (isNew) throw i18n('msgNamespaceConflict');
       style = Object.assign({}, oldStyle);
     } else {
       style = newStyle();

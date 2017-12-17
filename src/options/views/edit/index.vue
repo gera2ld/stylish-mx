@@ -169,10 +169,6 @@ export default {
         data: {
           id,
           sections,
-          // User created scripts MUST be marked `isNew` so that
-          // the backend is able to check namespace conflicts,
-          // otherwise the style with same id will be overridden
-          isNew: !id,
           message: '',
         },
       })
