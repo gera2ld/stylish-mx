@@ -7,9 +7,8 @@
     <p class="mb-2" v-text="i18n('extDescription')"></p>
     <div class="mb-2">
       <label v-text="i18n('labelRelated')"></label>
-      <a href="https://violentmonkey.github.io" target="_blank" v-text="i18n('extName')"></a> |
-      <a href="https://violentmonkey.github.io/donate/" target="_blank" v-text="i18n('labelDonate')"></a> |
-      <a href="https://github.com/violentmonkey/violentmonkey-mx/issues" target="_blank" v-text="i18n('labelFeedback')"></a>
+      <a href="https://github.com/gera2ld/stylish-mx/wiki" target="_blank" v-text="i18n('extName')"></a> |
+      <a href="https://github.com/gera2ld/stylish-mx/issues" target="_blank" v-text="i18n('labelFeedback')"></a>
     </div>
     <div class="mb-2">
       <label v-text="i18n('labelAuthor')"></label>
@@ -22,7 +21,7 @@
     <div class="mb-2">
       <label v-text="i18n('labelCurrentLang')"></label>
       <span id="currentLang" v-text="language"></span> |
-      <a href="https://violentmonkey.github.io/localization/" target="_blank">
+      <a href="https://github.com/gera2ld/stylish-mx/wiki/i18n" target="_blank">
         Help with translation
       </a>
     </div>
