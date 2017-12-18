@@ -168,6 +168,7 @@ export default {
         cmd: 'ParseStyle',
         data: {
           id,
+          meta: this.editData.meta,
           sections,
           message: '',
         },

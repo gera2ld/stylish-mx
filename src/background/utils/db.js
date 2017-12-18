@@ -205,7 +205,7 @@ export function removeStyle(id) {
   return Promise.resolve();
 }
 
-function saveStyle(style, sections) {
+function saveStyle(style) {
   const config = style.config || {};
   config.enabled = getInt(config.enabled);
   config.shouldUpdate = getInt(config.shouldUpdate);
@@ -227,7 +227,7 @@ function saveStyle(style, sections) {
     style.props = props;
     store.styles.push(style);
   }
-  style.sections = sections || [];
+  style.sections = style.sections || [];
   return storage.style.dump(style);
 }
 
@@ -279,7 +279,8 @@ export function parseStyle(data) {
       lastUpdated: Date.now(),
     }, props);
     style.meta = meta;
-    return saveStyle(style, sections).then(() => style);
+    style.sections = sections;
+    return saveStyle(style).then(() => style);
   })
   .then(style => {
     Object.assign(result.data.update, style);

@@ -80,7 +80,12 @@ const commands = {
       });
     });
   },
-  ParseStyle: parseStyle,
+  ParseStyle(data) {
+    return parseStyle(data).then(res => {
+      browser.runtime.sendMessage(res);
+      return res.data;
+    });
+  },
   CheckStyle({ url }) {
     return getStyle({ url })
     .then(style => style && { id: style.id, meta: style.meta });
