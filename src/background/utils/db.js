@@ -2,6 +2,7 @@ import { i18n } from 'src/common';
 import { objectGet } from 'src/common/object';
 import { newStyle } from './style';
 import { register } from './init';
+import patchDB from './patch-db';
 
 function ensureListArgs(handle) {
   return function handleList(data) {
@@ -62,7 +63,15 @@ storage.style = Object.assign({}, storage.base, {
 register(initialize());
 
 function initialize() {
-  return browser.storage.local.get()
+  return browser.storage.local.get('version')
+  .then(({ version: lastVersion }) => {
+    const { version } = browser.runtime.getManifest();
+    return (lastVersion ? Promise.resolve() : patchDB())
+    .then(() => {
+      if (version !== lastVersion) return browser.storage.local.set({ version });
+    });
+  })
+  .then(() => browser.storage.local.get())
   .then(data => {
     const styles = [];
     const storeInfo = {
