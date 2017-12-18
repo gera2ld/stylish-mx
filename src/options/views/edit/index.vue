@@ -34,21 +34,21 @@
       </div>
       <div class="flex-auto flex flex-col">
         <div class="flex edit-rules mb-1">
-          <div class="flex-auto mr-1">
+          <div class="flex-auto mr-1" :class="{active: activeRule === 'domains'}">
             <div class="edit-title" v-text="i18n('labelDomains')" />
-            <textarea v-model="current.domains" />
+            <textarea v-model="current.domains" @focus="getFocus('domains')" @blur="loseFocus('domains')" />
           </div>
-          <div class="flex-auto mr-1">
+          <div class="flex-auto mr-1" :class="{active: activeRule === 'regexps'}">
             <div class="edit-title" v-text="i18n('labelRegExps')" />
-            <textarea v-model="current.regexps" />
+            <textarea v-model="current.regexps" @focus="getFocus('regexps')" @blur="loseFocus('regexps')" />
           </div>
-          <div class="flex-auto mr-1">
+          <div class="flex-auto mr-1" :class="{active: activeRule === 'urlPrefixes'}">
             <div class="edit-title" v-text="i18n('labelUrlPrefixes')" />
-            <textarea v-model="current.urlPrefixes" />
+            <textarea v-model="current.urlPrefixes" @focus="getFocus('urlPrefixes')" @blur="loseFocus('urlPrefixes')" />
           </div>
-          <div class="flex-auto">
+          <div class="flex-auto" :class="{active: activeRule === 'urls'}">
             <div class="edit-title" v-text="i18n('labelUrls')" />
-            <textarea v-model="current.urls" />
+            <textarea v-model="current.urls" @focus="getFocus('urls')" @blur="loseFocus('urls')" />
           </div>
         </div>
         <div class="flex-auto pos-rel">
@@ -97,6 +97,7 @@ export default {
         save: this.save,
         close: this.close,
       },
+      activeRule: null,
     };
   },
   watch: {
@@ -213,6 +214,12 @@ export default {
         this.active = this.editData.sections.length - 1;
       }
     },
+    getFocus(tag) {
+      this.activeRule = tag;
+    },
+    loseFocus(tag) {
+      if (this.activeRule === tag) this.activeRule = null;
+    },
   },
 };
 </script>
@@ -229,6 +236,9 @@ export default {
       height: 120px;
       word-break: break-all;
       resize: none;
+    }
+    .active {
+      width: 50%;
     }
   }
   &-sections {
