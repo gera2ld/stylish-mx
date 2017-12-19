@@ -141,7 +141,9 @@ export function getStylesByURL(url) {
       const sections = style.sections.filter(({
         domains, regexps, urlPrefixes, urls,
       }) => (
-        domains.some(testDomain)
+        // all empty matches all
+        [domains, regexps, urlPrefixes, urls].every(({ length }) => !length)
+        || domains.some(testDomain)
         || regexps.some(testRegexp)
         || urlPrefixes.some(testUrlPrefix)
         || urls.some(testUrl)
