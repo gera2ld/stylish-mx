@@ -62,13 +62,17 @@ function initUserstylesOrg() {
     }
   });
 
-  const desc = objectGet(getMeta('stylish-description'), ['textContent']);
-
   document.addEventListener('stylishInstallChrome', onInstall);
   document.addEventListener('stylishUpdateChrome', onInstall);
 
   function onInstall() {
-    sendMessage({ cmd: 'ConfirmInstall', data: { type: styleId ? 'update' : 'install', desc } })
+    sendMessage({
+      cmd: 'ConfirmInstall',
+      data: {
+        type: styleId ? 'update' : 'install',
+        desc: objectGet(document.querySelector(getMeta('stylish-description')), ['textContent']),
+      },
+    })
     .then(message => {
       // eslint-disable-next-line no-alert
       if (!window.confirm(message)) return Promise.reject();

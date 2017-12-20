@@ -53,7 +53,7 @@ const commands = {
   },
   AutoUpdate: autoUpdate,
   GetAllOptions: getAllOptions,
-  ConfirmInstall(desc) {
+  ConfirmInstall({ desc }) {
     return i18n('msgConfirmInstall', [desc]);
   },
   GetData() {
