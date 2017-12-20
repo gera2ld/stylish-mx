@@ -1,5 +1,6 @@
 import { i18n } from 'src/common';
 import { objectGet } from 'src/common/object';
+import { broadcast } from '.';
 import { newStyle } from './style';
 import { register } from './init';
 import patchDB from './patch-db';
@@ -54,6 +55,12 @@ storage.style = Object.assign({}, storage.base, {
     items.forEach(item => {
       updates[this.getKey(item.props.id)] = item;
       store.styleMap[item.props.id] = item;
+    });
+    broadcast({
+      cmd: 'UpdateStyle',
+      data: {
+        ids: items.map(item => item.props.id),
+      },
     });
     return browser.storage.local.set(updates)
     .then(() => items);
@@ -127,17 +134,18 @@ export function getStylesByIds(ids) {
   .then(styles => styles.filter(Boolean));
 }
 
-export function getStyleCSS(id) {
-  return storage.css.getOne(id);
-}
-
 /**
  * @desc Get styles to be injected to page with specific URL.
  */
-export function getStylesByURL(url) {
+export function getStylesByURL(url, ids) {
   const domain = objectGet(url.match(/^[^:]*:\/\/([^/]*)/), [1]) || '';
-  const items = store.styles.map(style => {
-    if (!style.config.removed) {
+  const idMap = ids && ids.reduce((map, id) => {
+    map[id] = 1;
+    return map;
+  }, {});
+  const items = store.styles
+  .map(style => {
+    if ((!idMap || idMap[style.props.id]) && !style.config.removed) {
       const sections = style.sections.filter(({
         domains, regexps, urlPrefixes, urls,
       }) => (
@@ -187,7 +195,6 @@ export function checkRemove() {
     store.styles = store.styles.filter(style => !style.config.removed);
     const ids = toRemove.map(style => style.props.id);
     storage.style.removeMulti(ids);
-    storage.css.removeMulti(ids);
   }
   return Promise.resolve(toRemove.length);
 }
@@ -197,8 +204,6 @@ export function removeStyle(id) {
   if (i >= 0) {
     store.styles.splice(i, 1);
     storage.style.remove(id);
-    storage.css.remove(id);
-    storage.value.remove(id);
   }
   browser.runtime.sendMessage({
     cmd: 'RemoveStyle',

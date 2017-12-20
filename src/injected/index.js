@@ -13,36 +13,88 @@ import { getMeta, sendEvent } from './utils';
 
   const IS_TOP = window.top === window;
 
-  let ids = [];
+  const store = {
+    isApplied: false,
+    styles: [],
+    ids: [],
+  };
 
-  let styleEl;
-  sendMessage({ cmd: 'GetInjected', data: window.location.href })
-  .then(({ isApplied, styles }) => {
-    if (isApplied) {
-      if (!styleEl) {
-        styleEl = document.createElement('style');
-        (document.head || document.documentElement).appendChild(styleEl);
+  const handlers = {
+    UpdateStyle({ isApplied, ids }) {
+      if (isApplied != null) {
+        store.isApplied = isApplied;
+        applyStyles();
       }
-      ids = styles.map(({ props: { id } }) => id);
-      styleEl.textContent = styles.map(({ css }) => css).filter(Boolean).join('\n');
-    } else if (styleEl) {
-      const { parentNode } = styleEl;
-      if (parentNode) parentNode.removeChild(styleEl);
-      styleEl = null;
-    }
+      if (ids && ids.length) loadStyles(ids);
+    },
+  };
+  browser.runtime.onMessage.addListener((req, src) => {
+    console.log('receive', req);
+    const handle = handlers[req.cmd];
+    if (handle) handle(req.data, src);
   });
+  loadStyles();
 
   window.setPopup = () => {
     if (IS_TOP) {
       sendMessage({
         cmd: 'SetPopup',
-        data: { ids },
+        data: { ids: store.ids },
       });
     }
   };
 
   if (window.location.href.startsWith('https://userstyles.org/')) {
     document.addEventListener('DOMContentLoaded', initUserstylesOrg, false);
+  }
+
+  function loadStyles(ids) {
+    sendMessage({
+      cmd: 'GetInjected',
+      data: {
+        ids,
+        url: window.location.href,
+      },
+    })
+    .then(({ isApplied, styles }) => {
+      store.isApplied = isApplied;
+      if (ids) {
+        const styleMap = styles.reduce((map, style) => {
+          map[style.props.id] = style;
+          return map;
+        }, {});
+        ids.forEach(id => {
+          const style = styleMap[id];
+          const i = store.styles.findIndex(item => item.props.id === id);
+          if (i < 0) {
+            if (style) store.styles.push(style);
+          } else if (style) {
+            store.styles[i] = style;
+          } else {
+            store.styles.splice(i, 1);
+          }
+        });
+      } else {
+        store.styles = styles;
+      }
+      store.ids = styles.map(({ props: { id } }) => id);
+      applyStyles();
+    });
+  }
+  function applyStyles() {
+    let { styleEl } = store;
+    if (store.isApplied) {
+      if (!styleEl) {
+        styleEl = document.createElement('style');
+        store.styleEl = styleEl;
+        (document.head || document.documentElement).appendChild(styleEl);
+      }
+      styleEl.textContent = store.styles.map(({ css }) => css).filter(Boolean).join('\n');
+    } else if (styleEl) {
+      const { parentNode } = styleEl;
+      if (parentNode) parentNode.removeChild(styleEl);
+      store.styleEl = null;
+    }
   }
 }());
 

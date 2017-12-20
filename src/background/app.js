@@ -4,7 +4,7 @@ import { objectGet } from 'src/common/object';
 import {
   checkUpdate,
   getOption, setOption, hookOptions, getAllOptions,
-  initialize,
+  initialize, broadcast,
 } from './utils';
 import { newStyle } from './utils/style';
 import {
@@ -14,7 +14,15 @@ import {
 } from './utils/db';
 
 hookOptions(changes => {
-  if ('isApplied' in changes) setIcon(changes.isApplied);
+  if ('isApplied' in changes) {
+    setIcon(changes.isApplied);
+    broadcast({
+      cmd: 'UpdateStyle',
+      data: {
+        isApplied: changes.isApplied,
+      },
+    });
+  }
   // if ('showBadge' in changes) updateBadges();
   browser.runtime.sendMessage({
     cmd: 'UpdateOptions',
@@ -54,6 +62,16 @@ const commands = {
   },
   AutoUpdate: autoUpdate,
   GetAllOptions: getAllOptions,
+  GetOptions(data) {
+    return data.reduce((res, key) => {
+      res[key] = getOption(key);
+      return res;
+    }, {});
+  },
+  SetOptions(data) {
+    const items = Array.isArray(data) ? data : [data];
+    items.forEach(item => { setOption(item.key, item.value); });
+  },
   ConfirmInstall({ desc }) {
     return i18n('msgConfirmInstall', [desc]);
   },
@@ -61,12 +79,11 @@ const commands = {
     return checkRemove()
     .then(() => getData());
   },
-  GetInjected(url) {
+  GetInjected({ url, ids }) {
     const data = {
       isApplied: getOption('isApplied'),
     };
-    if (!data.isApplied) return data;
-    return getStylesByURL(url)
+    return getStylesByURL(url, ids)
     .then(styles => Object.assign(data, { styles }));
   },
   UpdateStyleInfo({ id, config }) {
