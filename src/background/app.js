@@ -9,12 +9,13 @@ import {
 import { newStyle } from './utils/style';
 import {
   getStyles, removeStyle, getData, checkRemove, getStylesByURL,
-  updateStyleInfo,
+  updateStyleInfo, getExportData,
   getStylesByIds, parseStyle, getStyle,
 } from './utils/db';
 
 hookOptions(changes => {
   if ('isApplied' in changes) setIcon(changes.isApplied);
+  // if ('showBadge' in changes) updateBadges();
   browser.runtime.sendMessage({
     cmd: 'UpdateOptions',
     data: changes,
@@ -93,7 +94,10 @@ const commands = {
   GetMetas(ids) {
     return getStylesByIds(ids);
   },
-  SetBadge: setBadge,
+  // SetBadge: setBadge,
+  ExportZip({ ids }) {
+    return getExportData(ids);
+  },
 };
 
 initialize()
@@ -119,25 +123,48 @@ initialize()
 });
 
 // REQUIRE tabId
-const badges = {};
-function setBadge({ number, reset }, src) {
-  const srcTab = src.tab || {};
-  let data = !reset && badges[srcTab.id];
-  if (!data) {
-    data = { number: 0 };
-    badges[srcTab.id] = data;
-  }
-  data.number += number;
-  if (getOption('showBadge')) {
-    browser.browserAction.setBadgeText({
-      tabId: srcTab.id,
-      text: data.number || '',
-    });
-  }
-}
-browser.tabs.onRemoved.addListener(id => {
-  delete badges[id];
-});
+// const badges = {};
+// function setBadge({ ids, reset }, src) {
+//   const srcTab = src.tab || {};
+//   let data = !reset && badges[srcTab.id];
+//   if (!data) {
+//     data = {
+//       unique: 0,
+//       idMap: {},
+//     };
+//     badges[srcTab.id] = data;
+//   }
+//   if (ids) {
+//     ids.forEach(id => {
+//       data.idMap[id] = 1;
+//     });
+//     data.unique = Object.keys(data.idMap).length;
+//   }
+//   updateBadge(srcTab.id);
+// }
+// function updateBadge(tabId) {
+//   const data = badges[tabId];
+//   if (data) {
+//     const showBadge = getOption('showBadge');
+//     let text;
+//     if (showBadge) text = data.unique;
+//     browser.browserAction.setBadgeText({
+//       text: `${text || ''}`,
+//       tabId,
+//     });
+//   }
+// }
+// function updateBadges() {
+//   browser.tabs.query({})
+//   .then(tabs => {
+//     tabs.forEach(tab => {
+//       updateBadge(tab.id);
+//     });
+//   });
+// }
+// browser.tabs.onRemoved.addListener(id => {
+//   delete badges[id];
+// });
 
 function setIcon(isApplied) {
   browser.browserAction.setIcon(`icon${isApplied ? '' : 'w'}`);
