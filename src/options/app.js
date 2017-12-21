@@ -10,6 +10,7 @@ import App from './views/app';
 
 Vue.prototype.i18n = i18n;
 
+zip.workerScriptsPath = '/public/lib/zip.js/';
 initialize();
 
 function loadHash() {

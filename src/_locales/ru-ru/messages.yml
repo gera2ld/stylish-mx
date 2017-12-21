@@ -7,7 +7,6 @@ anchorTranslator:
 buttonAllNone:
   description: Button to select all styles or none.
   message: Всё/Ничего
-  touched: false
 buttonCancel:
   description: Cancel button on dialog.
   message: ''
@@ -26,7 +25,6 @@ buttonEnable:
 buttonExportData:
   description: Button to open the data export dialog.
   message: Экспорт в ZIP файл
-  touched: false
 buttonFilter:
   description: Button to show filters menu.
   message: ''
@@ -37,7 +35,6 @@ buttonHome:
 buttonImportData:
   description: Button to choose a file for data import.
   message: Импорт из ZIP-файла
-  touched: false
 buttonNew:
   description: Button to create a new style.
   message: Новый
@@ -97,27 +94,28 @@ labelAuthor:
 labelAutoUpdate:
   description: Option to allow automatically checking styles for updates every 24 hours.
   message: ''
-  touched: false
 labelCurrentLang:
   description: Label of current language.
   message: ''
 labelDataExport:
   description: Section title of data export.
   message: Экспорт данных
-  touched: false
 labelDataImport:
   description: Section title of data import.
   message: Импорт данных
-  touched: false
 labelDomains:
   description: Label of domain rules.
   message: ''
 labelDonate:
   description: Label of link to donate page.
   message: Пожертвовать
+  touched: false
 labelFeedback:
   description: Label of link to feedback page.
   message: Обратная связь
+labelGeneral:
+  description: NEW_LOCALE_ITEM
+  message: ''
 labelImportSettings:
   description: Label for option to import settings from zip file.
   message: ''
@@ -162,11 +160,9 @@ labelSections:
 labelSettings:
   description: Label shown on the top of settings page
   message: Параметры экспорта
-  touched: false
 labelShowBadge:
   description: Option to show number of running styles on the badge.
   message: ''
-  touched: false
 labelStyleEditor:
   description: Shown in the title of the style editing page.
   message: ''
@@ -211,7 +207,6 @@ msgImported:
     Message shown after import. There is an argument referring to the count of
     scripts imported.
   message: $1 скрипт(ов) импортировано.
-  touched: false
 msgInstalled:
   description: Message shown when a style is installed.
   message: Стиль установлен.
@@ -239,4 +234,3 @@ sideMenuInstalled:
 sideMenuSettings:
   description: 'Side menu: Settings'
   message: Настройки
-  touched: false

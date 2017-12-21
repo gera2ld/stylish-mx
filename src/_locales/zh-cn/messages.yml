@@ -7,7 +7,6 @@ anchorTranslator:
 buttonAllNone:
   description: Button to select all styles or none.
   message: 全选/不选
-  touched: false
 buttonCancel:
   description: Cancel button on dialog.
   message: 取消
@@ -26,7 +25,6 @@ buttonEnable:
 buttonExportData:
   description: Button to open the data export dialog.
   message: 导出为zip文件
-  touched: false
 buttonFilter:
   description: Button to show filters menu.
   message: ''
@@ -37,7 +35,6 @@ buttonHome:
 buttonImportData:
   description: Button to choose a file for data import.
   message: 导入自zip文件
-  touched: false
 buttonNew:
   description: Button to create a new style.
   message: 新建
@@ -95,27 +92,28 @@ labelAuthor:
 labelAutoUpdate:
   description: Option to allow automatically checking styles for updates every 24 hours.
   message: ''
-  touched: false
 labelCurrentLang:
   description: Label of current language.
   message: 当前语言：
 labelDataExport:
   description: Section title of data export.
   message: 数据导出
-  touched: false
 labelDataImport:
   description: Section title of data import.
   message: 数据导入
-  touched: false
 labelDomains:
   description: Label of domain rules.
   message: 域名：
 labelDonate:
   description: Label of link to donate page.
   message: 捐助
+  touched: false
 labelFeedback:
   description: Label of link to feedback page.
   message: 反馈
+labelGeneral:
+  description: NEW_LOCALE_ITEM
+  message: ''
 labelImportSettings:
   description: Label for option to import settings from zip file.
   message: ''
@@ -160,11 +158,9 @@ labelSections:
 labelSettings:
   description: Label shown on the top of settings page
   message: 选项
-  touched: false
 labelShowBadge:
   description: Option to show number of running styles on the badge.
   message: ''
-  touched: false
 labelStyleEditor:
   description: Shown in the title of the style editing page.
   message: 样式编辑器
@@ -209,7 +205,6 @@ msgImported:
     Message shown after import. There is an argument referring to the count of
     scripts imported.
   message: 已导入$1个样式。
-  touched: false
 msgInstalled:
   description: Message shown when a style is installed.
   message: 样式已安装。
@@ -237,4 +232,3 @@ sideMenuInstalled:
 sideMenuSettings:
   description: 'Side menu: Settings'
   message: 设置
-  touched: false
