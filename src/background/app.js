@@ -10,7 +10,7 @@ import { newStyle } from './utils/style';
 import {
   getStyles, removeStyle, getData, checkRemove, getStylesByURL,
   updateStyleInfo, getExportData,
-  getStylesByIds, parseStyle, getStyle,
+  getStylesByIds, parseStyle, getStyle, parseFirefoxCss,
 } from './utils/db';
 
 hookOptions(changes => {
@@ -100,6 +100,12 @@ const commands = {
   },
   ParseStyle(data) {
     return parseStyle(data).then(res => {
+      browser.runtime.sendMessage(res);
+      return res.data;
+    });
+  },
+  ParseFirefoxCss(data) {
+    return parseFirefoxCss(data).then(res => {
       browser.runtime.sendMessage(res);
       return res.data;
     });

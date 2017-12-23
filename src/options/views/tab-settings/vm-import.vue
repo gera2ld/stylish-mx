@@ -24,13 +24,11 @@ export default {
 };
 
 function loadFile(entry) {
-  const isJson = entry.filename.endsWith('.json');
-  const isUserCss = entry.filename.endsWith('.user.css');
-  if (!isJson && !isUserCss) return;
   return new Promise(resolve => {
     const writer = new zip.TextWriter();
+    const { filename } = entry;
     entry.getData(writer, text => {
-      if (isJson) {
+      if (filename.endsWith('.json')) {
         let style;
         try {
           style = JSON.parse(text);
@@ -45,6 +43,12 @@ function loadFile(entry) {
         sendMessage({
           cmd: 'ParseStyle',
           data: { meta, sections },
+        })
+        .then(() => resolve(true), () => resolve());
+      } else if (filename.endsWith('.user.css')) {
+        sendMessage({
+          cmd: 'ParseFirefoxCss',
+          data: { filename: filename.slice(0, -9), code: text },
         })
         .then(() => resolve(true), () => resolve());
       } else {

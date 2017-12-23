@@ -120,7 +120,7 @@ export function getStyle(where) {
   if (where.id) {
     style = store.styleMap[where.id];
   } else if (where.url) {
-    style = store.styles.find(item => where.url === item.props.url);
+    style = store.styles.find(item => where.url === item.meta.url);
   }
   return Promise.resolve(style);
 }
@@ -294,4 +294,145 @@ export function parseStyle(data) {
     result.data.where = { id: style.props.id };
     return result;
   });
+}
+
+const whitelist = {
+  url: 1,
+  name: 1,
+  idUrl: 1,
+  md5Url: 1,
+  md5: 1,
+  updateUrl: 1,
+};
+const cssStart = '/* ==UserCSS==';
+const cssEnd = '==/UserCSS== */';
+const blockStart = '@-moz-document';
+const typeMap = {
+  domain: 'domains',
+  regexp: 'regexps',
+  'url-prefix': 'urlPrefixes',
+  url: 'urls',
+};
+const INVALID = 'INVALID';
+function throwInvalid() {
+  throw new Error(INVALID);
+}
+function skipSpaceAndComments(str, k) {
+  let skipped = true;
+  let i = k;
+  while (skipped) {
+    skipped = false;
+    // space
+    for (; i < str.length && /\s/.test(str[i]); i += 1) {
+      skipped = true;
+    }
+    // comments
+    if (str[i] === '/') {
+      skipped = true;
+      if (str[i + 1] !== '*') throwInvalid();
+      for (; i < str.length; i += 1) {
+        if (str[i] === '*' && str[i + 1] === '/') break;
+      }
+      if (i === str.length) throwInvalid();
+      i += 2;
+    }
+  }
+  return [i];
+}
+function getRuleType(str, k) {
+  let i;
+  for (i = k; i < str.length && /[\w-]/.test(str[i]); i += 1);
+  if (i === k || i === str.length) throwInvalid();
+  return [i, str.slice(k, i)];
+}
+function getRuleValue(str, k) {
+  if (str[k] !== '(') throwInvalid();
+  let quote = str[k + 1];
+  let i;
+  let j = k + 1;
+  if (!('\'"'.includes(quote))) quote = '';
+  else j += 1;
+  for (i = j; i < str.length; i += 1) {
+    if (str[i] === '\\') i += 1;
+    else if (quote && str[i] === quote || !quote && str[i] === ')') break;
+  }
+  if (i === str.length) throwInvalid();
+  let value = str.slice(j, i);
+  if (quote) {
+    i += 1;
+    if (quote === '"') value = JSON.parse(`"${value}"`);
+  }
+  if (str[i] !== ')') throwInvalid();
+  return [i + 1, value];
+}
+function getRuleBody(str, k) {
+  if (str[k] !== '{') throwInvalid();
+  let count = 1;
+  let i;
+  for (i = k + 1; i < str.length && count; i += 1) {
+    if (str[i] === '{') count += 1;
+    else if (str[i] === '}') count -= 1;
+  }
+  if (count) throwInvalid();
+  return [i, str.slice(k + 1, i - 1)];
+}
+export function parseFirefoxCss(data) {
+  const { filename, code } = data;
+  const meta = {
+    name: filename,
+  };
+  const sections = [];
+  let codeBlock = code;
+  const i = code.indexOf(cssStart);
+  const j = code.indexOf(cssEnd, i);
+  if (i >= 0 && j >= 0) {
+    const metaBlock = code.slice(i + cssStart.length, j);
+    metaBlock.replace(/@(\w+)\s+(.*?)\n/g, (m, g1, g2) => {
+      if (whitelist[g1]) meta[g1] = g2;
+    });
+    codeBlock = code.slice(0, i) + code.slice(j + cssEnd.length);
+  }
+  let k = 0;
+  let blockStarted = false;
+  let section;
+  try {
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      [k] = skipSpaceAndComments(codeBlock, k);
+      const char = codeBlock[k];
+      if (!char) break;
+      if (blockStarted) {
+        if (char === '{') {
+          const [k1, value] = getRuleBody(codeBlock, k);
+          k = k1;
+          blockStarted = false;
+          section.code = value;
+          sections.push(section);
+          section = null;
+        } else if (char === ',') {
+          k += 1;
+        } else {
+          const [k1, type] = getRuleType(codeBlock, k);
+          [k] = skipSpaceAndComments(codeBlock, k1);
+          const [k2, value] = getRuleValue(codeBlock, k);
+          k = k2;
+          const list = section[typeMap[type]];
+          if (list) list.push(value);
+        }
+      } else if (codeBlock.slice(k, k + blockStart.length) === blockStart) {
+        blockStarted = true;
+        k += blockStart.length;
+        section = {
+          domains: [],
+          regexps: [],
+          urlPrefixes: [],
+          urls: [],
+        };
+      } else throwInvalid();
+    }
+  } catch (err) {
+    if (err.message !== INVALID) throw err;
+    return Promise.reject(i18n('msgInvalidStyle'));
+  }
+  return parseStyle({ meta, sections });
 }
