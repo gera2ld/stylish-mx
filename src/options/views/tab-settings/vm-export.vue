@@ -10,11 +10,16 @@
     </div>
     <button v-text="i18n('buttonAllNone')" @click="toggleSelection()"></button>
     <button v-text="i18n('buttonExportData')" @click="exportData" :disabled="exporting"></button>
+    <label>
+      <setting-check name="exportFirefoxCss" />
+      <span v-text="i18n('labelExportFirefoxCss')"></span>
+    </label>
   </section>
 </template>
 
 <script>
 import { sendMessage } from 'src/common';
+import options from 'src/common/options';
 import SettingCheck from 'src/common/ui/setting-check';
 import { store } from '../../utils';
 
@@ -134,6 +139,30 @@ function downloadBlob(blob) {
   });
 }
 
+function toFirefoxCss(style) {
+  const metaEntries = Object.keys(style.meta).map(key => `@${key} ${style.meta[key]}`.replace(/\*/g, '+'));
+  const metaBlock = `/* ==UserCSS==\n${metaEntries.join('\n')}\n==/UserCSS== */`;
+  const cssBlocks = style.sections.map(({
+    domains, regexps, urlPrefixes, urls, code,
+  }) => {
+    const rules = [
+      ...domains.map(domain => `domain(${JSON.stringify(domain)})`),
+      ...regexps.map(regexp => `regexp(${JSON.stringify(regexp)})`),
+      ...urlPrefixes.map(urlPrefix => `url-prefix(${JSON.stringify(urlPrefix)})`),
+      ...urls.map(url => `url(${JSON.stringify(url)})`),
+    ];
+    return `@-moz-document ${rules.join(',\n')} {${code}}`;
+  });
+  return `${metaBlock}\n\n${cssBlocks.join('\n\n')}`;
+}
+
+function toJson(style) {
+  return {
+    meta: style.meta,
+    sections: style.sections,
+  };
+}
+
 function exportData(selectedIds) {
   if (!selectedIds.length) return;
   return sendMessage({
@@ -144,18 +173,16 @@ function exportData(selectedIds) {
   })
   .then(data => {
     const names = {};
+    const exportFirefoxCss = options.get('exportFirefoxCss');
     const files = data.items.map(style => {
       let name = style.meta.name || style.props.id;
       if (names[name]) {
         names[name] += 1;
         name = `${name}_${names[name]}`;
       } else names[name] = 1;
-      const content = JSON.stringify({
-        meta: style.meta,
-        sections: style.sections,
-      });
+      const content = exportFirefoxCss ? toFirefoxCss(style) : toJson(style);
       return {
-        name: `${name}.json`,
+        name: `${name}${exportFirefoxCss ? '.user.css' : '.json'}`,
         content,
       };
     });

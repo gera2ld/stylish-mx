@@ -8,6 +8,7 @@ const defaults = {
   lastUpdate: 0,
   showBadge: true,
   version: null,
+  exportFirefoxCss: false,
 };
 let changes = {};
 const hooks = initHooks();
