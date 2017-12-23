@@ -110,11 +110,14 @@ labelDonate:
   description: Label of link to donate page.
   message: Пожертвовать
   touched: false
+labelExportFirefoxCss:
+  description: Option to export as Firefox CSS files.
+  message: ''
 labelFeedback:
   description: Label of link to feedback page.
   message: Обратная связь
 labelGeneral:
-  description: NEW_LOCALE_ITEM
+  description: Label for general settings.
   message: ''
 labelImportSettings:
   description: Label for option to import settings from zip file.

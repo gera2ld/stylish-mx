@@ -91,7 +91,7 @@ labelAuthor:
   message: 作者：
 labelAutoUpdate:
   description: Option to allow automatically checking styles for updates every 24 hours.
-  message: ''
+  message: 每天自动更新脚本
 labelCurrentLang:
   description: Label of current language.
   message: 当前语言：
@@ -108,12 +108,15 @@ labelDonate:
   description: Label of link to donate page.
   message: 捐助
   touched: false
+labelExportFirefoxCss:
+  description: Option to export as Firefox CSS files.
+  message: 导出为Firefox的CSS文件
 labelFeedback:
   description: Label of link to feedback page.
   message: 反馈
 labelGeneral:
-  description: NEW_LOCALE_ITEM
-  message: ''
+  description: Label for general settings.
+  message: 通用
 labelImportSettings:
   description: Label for option to import settings from zip file.
   message: ''
