@@ -29,7 +29,6 @@ import { getMeta, sendEvent } from './utils';
     },
   };
   browser.runtime.onMessage.addListener((req, src) => {
-    console.log('receive', req);
     const handle = handlers[req.cmd];
     if (handle) handle(req.data, src);
   });

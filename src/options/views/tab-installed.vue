@@ -2,7 +2,7 @@
   <div class="tab-installed">
     <header class="flex">
       <div class="flex-auto">
-        <vl-dropdown :closeAfterClick="true">
+        <dropdown :closeAfterClick="true" :class="{active: menuNewActive}" @stateChange="onStateChange">
           <tooltip :title="i18n('buttonNew')" placement="down" align="start" slot="toggle">
             <span class="btn-ghost">
               <icon name="plus"></icon>
@@ -10,7 +10,7 @@
           </tooltip>
           <div class="dropdown-menu-item" v-text="i18n('buttonNew')" @click.prevent="newStyle"></div>
           <a class="dropdown-menu-item" v-text="i18n('installFrom', 'userstyles.org')" href="https://userstyles.org/" target="_blank"></a>
-        </vl-dropdown>
+        </dropdown>
         <tooltip :title="i18n('buttonUpdateAll')" placement="down" align="start">
           <span class="btn-ghost" @click="updateAll">
             <icon name="refresh"></icon>
@@ -34,14 +34,14 @@
 </template>
 
 <script>
-import VlDropdown from 'vueleton/lib/dropdown';
+import Dropdown from 'vueleton/lib/dropdown';
+import Tooltip from 'vueleton/lib/tooltip';
 import { i18n, sendMessage, debounce } from 'src/common';
 import { objectGet } from 'src/common/object';
 // import options from 'src/common/options';
 import SettingCheck from 'src/common/ui/setting-check';
 // import hookSetting from 'src/common/hook-setting';
 import Icon from 'src/common/ui/icon';
-import Tooltip from 'src/common/ui/tooltip';
 import LocaleGroup from 'src/common/ui/locale-group';
 import Item from './style-item';
 import Edit from './edit';
@@ -58,7 +58,7 @@ export default {
     Tooltip,
     SettingCheck,
     LocaleGroup,
-    VlDropdown,
+    Dropdown,
     Icon,
   },
   data() {
@@ -67,6 +67,7 @@ export default {
       style: null,
       search: null,
       modal: null,
+      menuNewActive: false,
     };
   },
   watch: {
@@ -110,6 +111,9 @@ export default {
     },
     endEditStyle() {
       this.style = null;
+    },
+    onStateChange(active) {
+      this.menuNewActive = active;
     },
   },
   created() {

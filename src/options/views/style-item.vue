@@ -45,9 +45,9 @@
 </template>
 
 <script>
+import Tooltip from 'vueleton/lib/tooltip';
 import { sendMessage } from 'src/common';
 import Icon from 'src/common/ui/icon';
-import Tooltip from 'src/common/ui/tooltip';
 
 export default {
   props: ['styleData'],

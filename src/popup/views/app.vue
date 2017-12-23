@@ -45,7 +45,6 @@ const optionsData = {
   isApplied: options.get('isApplied'),
 };
 options.hook(changes => {
-  console.log(changes, optionsData);
   if ('isApplied' in changes) {
     optionsData.isApplied = changes.isApplied;
   }

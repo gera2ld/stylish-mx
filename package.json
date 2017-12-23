@@ -59,12 +59,13 @@
     "vue-loader": "^13.5.0",
     "vue-style-loader": "^3.0.3",
     "vue-template-compiler": "^2.5.9",
-    "webpack": "^3.10.0"
+    "webpack": "^3.10.0",
+    "webpack-bundle-size-analyzer": "^2.7.0"
   },
   "dependencies": {
     "codemirror": "^5.32.0",
     "core-js": "^2.5.1",
     "vue": "^2.5.9",
-    "vueleton": "^0.5.0"
+    "vueleton": "^0.6.1"
   }
 }
