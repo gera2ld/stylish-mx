@@ -143,6 +143,14 @@ initialize()
   });
   setTimeout(autoUpdate, 2e4);
   checkRemove();
+  if (getOption('startReload')) {
+    const code = 'location.reload()';
+    browser.tabs.query({}).then(tabs => {
+      tabs.forEach(tab => {
+        browser.tabs.executeScript(tab.id, { code });
+      });
+    });
+  }
 });
 
 // REQUIRE tabId

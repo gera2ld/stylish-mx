@@ -449,6 +449,9 @@ if (typeof browser === 'undefined') {
         }
         return Promise.resolve(tabs);
       },
+      executeScript(tabId, options) {
+        br.executeScript(options.code, tabId);
+      },
       onActivated: {
         addListener(listener) {
           tabEvents.activate(listener);

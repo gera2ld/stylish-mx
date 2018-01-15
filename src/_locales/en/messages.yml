@@ -164,6 +164,9 @@ labelSettings:
 labelShowBadge:
   description: Option to show number of running styles on the badge.
   message: Show number of running styles on the badge
+labelStartReload:
+  description: Option to reload existed tabs on start.
+  message: Reload existed tabs on start
 labelStyleEditor:
   description: Shown in the title of the style editing page.
   message: Style Editor

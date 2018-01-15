@@ -9,6 +9,12 @@
           <span v-text="i18n('labelAutoUpdate')"></span>
         </label>
       </div>
+      <div class="mb-1">
+        <label>
+          <setting-check name="startReload" />
+          <span v-text="i18n('labelStartReload')"></span>
+        </label>
+      </div>
       <!--
       <div class="mb-1">
         <label>

@@ -7,6 +7,7 @@ const defaults = {
   autoUpdate: true,
   lastUpdate: 0,
   showBadge: true,
+  startReload: true,
   version: null,
   exportFirefoxCss: false,
 };
