@@ -138,8 +138,5 @@ function initUserstylesOrg() {
 
 function getPayload(id) {
   return request(getMeta('stylish-code-chrome'), { responseType: 'json' })
-  .then(({ data }) => {
-    const { sections, ...meta } = data;
-    return { id, sections, meta };
-  });
+  .then(({ data }) => ({ id, raw: data }));
 }

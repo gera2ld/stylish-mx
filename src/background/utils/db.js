@@ -257,8 +257,15 @@ export function getExportData(ids) {
 
 export function parseStyle(data) {
   const {
-    id, meta, message, config, props, sections,
+    id, message, config, props, raw,
   } = data;
+  let sections;
+  let meta;
+  if (raw) {
+    ({ sections, ...meta } = raw);
+  } else {
+    ({ sections, meta } = data);
+  }
   if (!meta.name) return Promise.reject(i18n('msgInvalidStyle'));
   const result = {
     cmd: 'UpdateStyle',

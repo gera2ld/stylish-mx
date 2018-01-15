@@ -58,11 +58,7 @@ export default function checkUpdate(style) {
   if (!promise) {
     let updated = false;
     promise = doCheckUpdate(style)
-    .then(({ sections, ...meta }) => parseStyle({
-      id,
-      meta,
-      sections,
-    }))
+    .then(({ data: raw }) => parseStyle({ id, raw }))
     .then(res => {
       const { data: { update } } = res;
       update.checking = false;
