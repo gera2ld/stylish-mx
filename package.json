@@ -63,7 +63,7 @@
     "webpack-bundle-size-analyzer": "^2.7.0"
   },
   "dependencies": {
-    "@gera2ld/promise-lite": "^1.0.0",
+    "@gera2ld/promise-lite": "^1.1.0",
     "codemirror": "^5.32.0",
     "core-js": "^2.5.1",
     "vue": "^2.5.9",
